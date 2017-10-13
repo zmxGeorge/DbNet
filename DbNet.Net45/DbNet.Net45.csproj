@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DbContext.cs" />
     <Compile Include="Extension.cs" />
     <Compile Include="ILDbNetFunctionProvider.cs" />
     <Compile Include="MethodHelper.cs" />
