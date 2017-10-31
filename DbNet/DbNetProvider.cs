@@ -12,6 +12,10 @@ namespace DbNet
     public enum ExecuteType
     {
         /// <summary>
+        /// 默认设置
+        /// </summary>
+        Default=0,
+        /// <summary>
         /// 不做查询，执行数据库命令，返回受影响行数
         /// </summary>
         ExecuteNoQuery=1,

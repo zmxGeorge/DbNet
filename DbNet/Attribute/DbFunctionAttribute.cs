@@ -16,6 +16,7 @@ namespace DbNet
             IsolationLevel = DbNetIsolationLevel.None;
             UseTransaction = false;
             CacheTime = 0;
+            ExecuteType = ExecuteType.Default;
         }
 
         /// <summary>
@@ -33,6 +34,11 @@ namespace DbNet
         /// 命令类型
         /// </summary>
         public string CommandType { get; set; }
+
+        /// <summary>
+        /// 命令的执行方法
+        /// </summary>
+        public ExecuteType ExecuteType { get; set; }
 
         /// <summary>
         /// 是否使用事务

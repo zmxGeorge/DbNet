@@ -27,11 +27,11 @@ namespace DbNet
         /// <returns></returns>
         public T GetParamterValue<T>(string paramterKey)
         {
-            if (Command == null)
+            if (_dbNetCommand == null)
             {
                 return default(T);
             }
-            return (T)Convert.ChangeType(Command.Paramters.Get(paramterKey), typeof(T));
+            return (T)Convert.ChangeType(_dbNetCommand.Paramters.Get(paramterKey), typeof(T));
         }
 
         /// <summary>

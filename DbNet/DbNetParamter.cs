@@ -25,5 +25,15 @@ namespace DbNet
         /// 参数方向
         /// </summary>
         public DbNetParamterDirection Direction { get; set; }
+
+        /// <summary>
+        /// 目标参数位置
+        /// </summary>
+        public int SourceIndex { get; set; }
+
+        /// <summary>
+        /// 目标参数源类型
+        /// </summary>
+        public SourceType SourceType { get; set; }
     }
 }

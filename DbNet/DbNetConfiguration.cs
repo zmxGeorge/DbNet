@@ -104,7 +104,7 @@ namespace DbNet
         /// <typeparam name="TDbProvider">对应的数据库提供程序</typeparam>
         /// <param name="routeName">路由名称</param>
         public static void MapRoute<TDbRouteProvider>(string routeName)
-            where TDbRouteProvider : DbNetRouteProvider, new()
+            where TDbRouteProvider : DbNetRouteProvider,new()
         {
             if (_configuration._route_map.ContainsKey(routeName)&&
                 routeName!="*")
