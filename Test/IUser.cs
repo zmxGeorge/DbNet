@@ -26,7 +26,7 @@ namespace Test
     public interface IUser:IDbFunction
     {
         [DbFunction(SqlText ="select * from user username=@name password=@password",
-            ExecuteType =ExecuteType.ExecuteObject,CommandType ="SqlText")]
-        string LoginUser(string name,string password,int id,DateTime dateTime,byte[] data,Guid guid,ref M m);
+            ExecuteType =ExecuteType.ExecuteObject,CommandType ="SqlText",UserCache =true)]
+        string LoginUser(string name,string password,[DbCacheKey]int id,DateTime dateTime,byte[] data,Guid guid,ref M m);
     }
 }

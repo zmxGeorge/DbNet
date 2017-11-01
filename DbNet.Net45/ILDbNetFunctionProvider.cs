@@ -201,6 +201,7 @@ namespace DbNet
         /// <param name="paramterListBulider"></param>
         private static void GetParamters(ParameterInfo[] paramterList, ILGenerator gen,LocalBuilder paramterListBulider,bool use_cache)
         {
+            bool haschache_attr = paramterList.Any(x => x.GetCustomAttribute<DbCacheKeyAttribute>() != null);
             foreach (var paramter in paramterList)
             {
                 Type pType = paramter.ParameterType;
@@ -210,7 +211,7 @@ namespace DbNet
                 if (use_cache)
                 {
                     cacheKeyType = CacheKeyType.Bind;
-                    if (paramterList.Any(x => x.GetCustomAttribute<DbCacheKeyAttribute>() != null))
+                    if (haschache_attr)
                     {
                         cacheKeyType = CacheKeyType.None;
                     }
@@ -281,6 +282,7 @@ namespace DbNet
                 {
                     //如果参数是类则需进一步处理
                     var pinfo = pTypeBulider.LocalType.GetProperties();
+                    var cache_attr_c = paramter.GetCustomAttribute<DbCacheKeyAttribute>();
                     foreach (var p in pinfo)
                     {
                         DbParamterAttribute attr_p = p.GetCustomAttribute<DbParamterAttribute>(true);
@@ -291,6 +293,14 @@ namespace DbNet
                         if (use_cache)
                         {
                             p_cacheKeyType = CacheKeyType.Bind;
+                            if (haschache_attr)
+                            {
+                                cacheKeyType = CacheKeyType.None;
+                            }
+                            if (cache_attr_c != null)
+                            {
+                                cacheKeyType = CacheKeyType.Bind;
+                            }
                             if (attr_p != null&&attr_p.CacheKey!=CacheKeyType.Default)
                             {
                                 p_cacheKeyType = attr_p.CacheKey;
