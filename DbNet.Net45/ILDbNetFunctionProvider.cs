@@ -210,11 +210,11 @@ namespace DbNet
                 if (use_cache)
                 {
                     cacheKeyType = CacheKeyType.Bind;
-                    if (paramterList.Any(x => x.GetCustomAttribute<DbNetCacheKeyAttribute>() != null))
+                    if (paramterList.Any(x => x.GetCustomAttribute<DbCacheKeyAttribute>() != null))
                     {
                         cacheKeyType = CacheKeyType.None;
                     }
-                    var cache_attr = paramter.GetCustomAttribute<DbNetCacheKeyAttribute>();
+                    var cache_attr = paramter.GetCustomAttribute<DbCacheKeyAttribute>();
                     if (cache_attr != null)
                     {
                         cacheKeyType = CacheKeyType.Bind;
