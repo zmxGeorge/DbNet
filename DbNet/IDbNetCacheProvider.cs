@@ -4,6 +4,11 @@ using System.Text;
 
 namespace DbNet
 {
+    public class DbNetCacheCollection
+    {
+
+    }
+
     /// <summary>
     /// 缓存提供程序
     /// </summary>

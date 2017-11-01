@@ -35,5 +35,10 @@ namespace DbNet
         /// 目标参数源类型
         /// </summary>
         public SourceType SourceType { get; set; }
+
+        /// <summary>
+        /// 缓存关键字类型
+        /// </summary>
+        public CacheKeyType CacheKeyType { get; set; }
     }
 }

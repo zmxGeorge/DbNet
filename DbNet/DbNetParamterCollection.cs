@@ -33,14 +33,14 @@ namespace DbNet
         {
         }
 
-        public void Add<T>(string key, T value, DbNetParamterDirection direction,int sourceIndex,SourceType sourceType)
+        public void Add<T>(string key, T value, DbNetParamterDirection direction,int sourceIndex,SourceType sourceType,CacheKeyType cacheKeyType)
         {
             if (dic.ContainsKey(key))
             {
                 throw new Exception(string.Format("参数名称重复，来自 参数位置:{0} 源:{1}",sourceIndex,sourceType==SourceType.FromClass?"来自类属性": 
                     sourceType == SourceType.FromArg ? "来自方法参数":"未知"));
             }
-            dic.Add(key,new DbNetParamter { Name = key, Value = value, Direction = direction,SourceIndex=sourceIndex,SourceType= sourceType });
+            dic.Add(key,new DbNetParamter { Name = key, Value = value, Direction = direction,SourceIndex=sourceIndex,SourceType= sourceType,CacheKeyType= cacheKeyType });
         }
 
         public DbNetParamter Get(string key)

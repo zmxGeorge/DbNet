@@ -115,7 +115,7 @@ namespace DbNet
                 //初始化参数集合
                 gen.Emit(OpCodes.Newobj, typeof(DbNetParamterCollection).GetConstructor(Type.EmptyTypes));
                 gen.Emit(OpCodes.Stloc, paramterBulider);
-                GetParamters(paramterList, gen, paramterBulider);
+                GetParamters(paramterList, gen, paramterBulider,user_cache);
                 MapRouteAndProvider(configuration, route_name, function_type, m, m_route_type, gen, sqlConnection_bulider, dbNetProvider, paramterBulider);
 
                 gen.BeginCatchBlock(typeof(Exception));
@@ -199,13 +199,27 @@ namespace DbNet
         /// <param name="paramterList"></param>
         /// <param name="gen"></param>
         /// <param name="paramterListBulider"></param>
-        private static void GetParamters(ParameterInfo[] paramterList, ILGenerator gen,LocalBuilder paramterListBulider)
+        private static void GetParamters(ParameterInfo[] paramterList, ILGenerator gen,LocalBuilder paramterListBulider,bool use_cache)
         {
             foreach (var paramter in paramterList)
             {
                 Type pType = paramter.ParameterType;
                 LocalBuilder pTypeBulider = null;
                 DbNetParamterDirection dir = DbNetParamterDirection.Input;
+                CacheKeyType cacheKeyType = CacheKeyType.None;
+                if (use_cache)
+                {
+                    cacheKeyType = CacheKeyType.Bind;
+                    if (paramterList.Any(x => x.GetCustomAttribute<DbNetCacheKeyAttribute>() != null))
+                    {
+                        cacheKeyType = CacheKeyType.None;
+                    }
+                    var cache_attr = paramter.GetCustomAttribute<DbNetCacheKeyAttribute>();
+                    if (cache_attr != null)
+                    {
+                        cacheKeyType = CacheKeyType.Bind;
+                    }
+                }
                 if (pType != typeof(IDbNetScope) &&
                     pType != typeof(IDbNetScope).MakeByRefType())
                 {
@@ -260,6 +274,7 @@ namespace DbNet
                     gen.Emit(OpCodes.Ldc_I4, (int)dir);
                     gen.Emit(OpCodes.Ldc_I4, paramter.Position);
                     gen.Emit(OpCodes.Ldc_I4, (int)SourceType.FromArg);
+                    gen.Emit(OpCodes.Ldc_I4, (int)cacheKeyType);
                     gen.Emit(OpCodes.Call, MethodHelper.paramterMethod.MakeGenericMethod(pTypeBulider.LocalType));
                 }
                 else
@@ -272,6 +287,15 @@ namespace DbNet
                         bool except = false;
                         string name = string.Empty;
                         DbNetParamterDirection pdir = DbNetParamterDirection.Input;
+                        CacheKeyType p_cacheKeyType = CacheKeyType.None;
+                        if (use_cache)
+                        {
+                            p_cacheKeyType = CacheKeyType.Bind;
+                            if (attr_p != null&&attr_p.CacheKey!=CacheKeyType.Default)
+                            {
+                                p_cacheKeyType = attr_p.CacheKey;
+                            }
+                        }
                         if (paramter.IsOut)
                         {
                             pdir = DbNetParamterDirection.Output;
@@ -299,6 +323,7 @@ namespace DbNet
                             gen.Emit(OpCodes.Ldc_I4, (int)pdir);
                             gen.Emit(OpCodes.Ldc_I4, paramter.Position);
                             gen.Emit(OpCodes.Ldc_I4, (int)SourceType.FromClass);
+                            gen.Emit(OpCodes.Ldc_I4, (int)p_cacheKeyType);
                             gen.Emit(OpCodes.Call, MethodHelper.paramterMethod.MakeGenericMethod(p.PropertyType));
                         }
                     }
