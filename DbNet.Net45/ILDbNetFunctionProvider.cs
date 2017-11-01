@@ -215,7 +215,7 @@ namespace DbNet
                         gen.Emit(OpCodes.Stloc, pTypeBulider);
                         gen.MarkLabel(isNullLabel);
                     }
-                    if (paramter.IsOut)
+                    if (paramter.IsOut||pType.IsByRef)
                     {
                         dir = DbNetParamterDirection.Output;
                         //初始化赋值输出参数
