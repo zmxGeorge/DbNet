@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DbNet</RootNamespace>
     <AssemblyName>DbNet</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -40,20 +41,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DbNetCacheProvider.cs" />
+    <Compile Include="IDbNetCacheProvider.cs" />
     <Compile Include="Attribute\DbFunctionAttribute.cs" />
     <Compile Include="Attribute\DbParamterAttribute.cs" />
     <Compile Include="Attribute\DbRouteAttribute.cs" />
-    <Compile Include="DbNetProvider.cs" />
-    <Compile Include="Attribute\DbRouteKeyAttribute.cs" />
-    <Compile Include="DbNetRouteProvider.cs" />
+    <Compile Include="IDbNetProvider.cs" />
+    <Compile Include="IDbNetRouteProvider.cs" />
     <Compile Include="DbNetCommand.cs" />
     <Compile Include="DbNetConfiguration.cs" />
     <Compile Include="DbNetFunctionProvider.cs" />
     <Compile Include="DbNetIsolationLevel.cs" />
     <Compile Include="DbNetParamter.cs" />
     <Compile Include="DbNetParamterCollection.cs" />
-    <Compile Include="DbNetScope.cs" />
+    <Compile Include="IDbNetScope.cs" />
     <Compile Include="DbNetParamterDirection.cs" />
     <Compile Include="IDbFunction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

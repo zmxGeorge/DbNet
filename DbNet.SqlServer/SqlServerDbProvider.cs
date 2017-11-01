@@ -8,11 +8,15 @@ using System.Threading.Tasks;
 
 namespace DbNet
 {
-    public class SqlServerDbProvider : DbNetProvider
+    public class SqlServerDbProvider : IDbNetProvider
     {
         private const string PARAMTERFORAMT = "@{0}";
 
-        public override object ExecuteCommand<TResult>(DbNetCommand command, DbNetScope scope, ExecuteType executetype)
+        public SqlServerDbProvider()
+        {
+        }
+
+        public object ExecuteCommand<TResult>(DbNetCommand command, IDbNetScope scope, ExecuteType executetype)
         {
             //封装数据库执行
             object result = null;
@@ -63,7 +67,7 @@ namespace DbNet
             return result;
         }
 
-        public override DbNetScope GetScope(DbNetScope scope,DbNetCommand command)
+        public IDbNetScope GetScope(IDbNetScope scope,DbNetCommand command)
         {
             if (scope != null&&scope is SqlServerDbNetScope)
             {

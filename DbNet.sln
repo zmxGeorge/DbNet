@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbNet.MemoryCache", "DbNet.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbNet.Net45", "DbNet.Net45\DbNet.Net45.csproj", "{80773A9A-3CCF-4013-802D-B91BF50A4A14}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{01BB21AC-8E35-4522-BE71-A4D87A9E18B7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{80773A9A-3CCF-4013-802D-B91BF50A4A14}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{80773A9A-3CCF-4013-802D-B91BF50A4A14}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{80773A9A-3CCF-4013-802D-B91BF50A4A14}.Release|Any CPU.Build.0 = Release|Any CPU
+		{01BB21AC-8E35-4522-BE71-A4D87A9E18B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01BB21AC-8E35-4522-BE71-A4D87A9E18B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01BB21AC-8E35-4522-BE71-A4D87A9E18B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01BB21AC-8E35-4522-BE71-A4D87A9E18B7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

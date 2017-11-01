@@ -30,9 +30,9 @@ namespace DbNet
     }
 
     /// <summary>
-    /// 数据库支持提供程序
+    /// 数据库支持提供程序接口
     /// </summary>
-    public abstract class DbNetProvider
+    public interface IDbNetProvider
     {
         /// <summary>
         /// 执行命令
@@ -42,7 +42,7 @@ namespace DbNet
         /// <param name="scope">执行范围</param>
         /// <param name="executeType">执行类型</param>
         /// <returns></returns>
-        public abstract object ExecuteCommand<TResult>(DbNetCommand command, DbNetScope scope, ExecuteType executeType);
+       object ExecuteCommand<TResult>(DbNetCommand command, IDbNetScope scope, ExecuteType executeType);
 
         /// <summary>
         /// 获取一个可用的执行范围
@@ -50,7 +50,7 @@ namespace DbNet
         /// <param name="scope">可能由外部传入的值</param>
         /// <param name="command">执行命令</param>
         /// <returns></returns>
-        public abstract DbNetScope GetScope(DbNetScope scope, DbNetCommand command);
+        IDbNetScope GetScope(IDbNetScope scope, DbNetCommand command);
 
     }
 }

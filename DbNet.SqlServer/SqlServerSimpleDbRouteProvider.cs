@@ -10,18 +10,22 @@ namespace DbNet
     /// 简单SqlServer数据库路由提供程序
     /// 不带分布式处理
     /// </summary>
-    public class SqlServerSimpleDbRouteProvider : DbNetRouteProvider
+    public class SqlServerSimpleDbRouteProvider : IDbNetRouteProvider
     {
         private static string _connectionString = null;
 
         private static readonly SqlServerDbProvider _dbProvider = new SqlServerDbProvider();
+
+        public SqlServerSimpleDbRouteProvider()
+        {
+        }
 
         public static void SetDefaultConnectionString(string connectionString)
         {
             _connectionString = connectionString;
         }
 
-        public override string RouteDbConnection(string routeName, string moduleName, string methodName, Dictionary<string, object> paramters, ref DbNetProvider dbProvider)
+        public string RouteDbConnection(string routeName, string moduleName, string methodName, DbNetParamterCollection paramters, ref IDbNetProvider dbProvider)
         {
             if (string.IsNullOrEmpty(_connectionString))
             {

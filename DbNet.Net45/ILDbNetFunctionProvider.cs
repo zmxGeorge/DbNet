@@ -64,6 +64,9 @@ namespace DbNet
                 route_name = routeAttribute.Name;
             }
             var methods = function_type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+            //创建实现类型
+            TypeBuilder tb = module_bulider.DefineType(string.Format(KEY_FORMAT, function_type.Name, function_type.Namespace + "."), TypeAttributes.Class | TypeAttributes.Public, typeof(DbContext));
+            tb.AddInterfaceImplementation(function_type);
             foreach (var m in methods)
             {
                 //路由类型
@@ -78,100 +81,93 @@ namespace DbNet
                     }
                     //判断接口方法中是否存在路由，如果有则设定为该路由类型
                     m_route_type = configuration.RouteCollection[m_route.Name];
-                    if (m_route_type == null)
-                    {
-                        throw new ArgumentException(string.Format("方法：{0} 未设置任何路由", m.Name));
-                    }
-                    #region IL代码开始
-                    //创建实现类型
-                    TypeBuilder tb = module_bulider.DefineType(string.Format(KEY_FORMAT, function_type.Namespace + ".", function_type.Name), TypeAttributes.Class | TypeAttributes.Public, typeof(DbContext));
-                    tb.AddInterfaceImplementation(function_type);
-                    var paramterList = m.GetParameters();
-                    var tm = tb.DefineMethod(m.Name, MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.RTSpecialName, CallingConventions.HasThis,
-                    m.ReturnType, paramterList.Select(x => x.ParameterType).ToArray());
-                    //定义方法实现内容
-                    ILGenerator gen = tm.GetILGenerator();
-                    ExecuteType executeType = m_fun.ExecuteType;
-                    GetExecuteType(m, ref executeType);
-                    bool user_cache = m_fun.UserCache;
-                    bool user_tran = m_fun.UseTransaction;
-                    LocalBuilder result_builder = gen.DeclareLocal(m.ReturnType);//定义返回变量
-                    LocalBuilder sqlText_bulider = gen.DeclareLocal(typeof(string));//定义Sql语句变量
-                    LocalBuilder sqlConnection_bulider = gen.DeclareLocal(typeof(string));//定义数据库连接变量
-                    LocalBuilder hasCache_bulider = gen.DeclareLocal(typeof(bool));//定义是否存在缓存变量
-                    LocalBuilder dbNetProvider = gen.DeclareLocal(typeof(DbNetProvider));//定义数据库提供程序变量
-                    LocalBuilder cacheProvider = gen.DeclareLocal(typeof(DbNetCacheProvider));//定义缓存提供程序变量
-                    LocalBuilder exceptionBulider = gen.DeclareLocal(typeof(Exception));//定义异常变量，使用try catch
-                    LocalBuilder paramterBulider = gen.DeclareLocal(typeof(DbNetParamterCollection));//定义封装参数的集合变量
-                    gen.BeginExceptionBlock();//try开始
-                    if (user_cache)
-                    {
-                        //若存在缓存，创建缓存提供程序
-                        gen.Emit(OpCodes.Newobj, configuration.CacheProviderType.GetConstructor(Type.EmptyTypes));
-                        gen.Emit(OpCodes.Stloc, cacheProvider);
-                    }
-
-                    //初始化参数集合
-                    gen.Emit(OpCodes.Newobj, typeof(DbNetParamterCollection).GetConstructor(Type.EmptyTypes));
-                    gen.Emit(OpCodes.Stloc, paramterBulider);
-
-                    #region 获取输入参数
-
-                    GetParamters(paramterList, gen, paramterBulider);
-
-                    #endregion
-
-                    #region 创建路由获取数据库连接以及数据库提供程序
-
-                    if (configuration.DbProvider != null)
-                    {
-                        //创建默认的提供程序
-                        gen.Emit(OpCodes.Newobj, configuration.DbProvider.GetConstructor(Type.EmptyTypes));
-                        gen.Emit(OpCodes.Stloc, dbNetProvider);
-                    }
-
-                    LocalBuilder routeParamtersBulider = gen.DeclareLocal(typeof(Dictionary<string, object>));
-                    gen.Emit(OpCodes.Newobj, routeParamtersBulider.LocalType.GetConstructor(Type.EmptyTypes));
-                    gen.Emit(OpCodes.Stloc, routeParamtersBulider);
-
-                    gen.Emit(OpCodes.Newobj, m_route_type.GetConstructor(Type.EmptyTypes));
-                    gen.Emit(OpCodes.Ldstr, route_name);
-                    gen.Emit(OpCodes.Ldstr, function_type.Name);
-                    gen.Emit(OpCodes.Ldloc, routeParamtersBulider);
-                    gen.Emit(OpCodes.Ldloca, dbNetProvider);
-                    gen.Emit(OpCodes.Call, MethodHelper.dbNetRouteMethod);
-                    #endregion
-                    gen.BeginCatchBlock(typeof(Exception));
-                    //catch处理
-                    gen.Emit(OpCodes.Stloc, exceptionBulider);
-
-
-                    gen.EndExceptionBlock();
-
-                    //若有out参数返回值在此处理
-                    //若存在缓存在此处理
-                    //若存在事务在此处理
-
-                    #region 返回结果
-                    if (m.ReturnType != null)
-                    {
-                        gen.Emit(OpCodes.Ldloc, result_builder);
-                    }
-                    gen.Emit(OpCodes.Ret);
-                    #endregion
-
-                    #endregion
-
-                    route_name = m_route.Name;
-                    dynamic route = Activator.CreateInstance(m_route_type);
-                    //string connectionString = route.RouteDbConnection(route_name, function_type.Name, m.Name,paramters,);
                 }
                 if (m_route_type == null)
                 {
-                    throw new Exception("未配置任何数据库路由");
+                    throw new ArgumentException(string.Format("方法：{0} 未设置任何路由", m.Name));
                 }
+                #region IL代码开始
+                var paramterList = m.GetParameters();
+                var tm = tb.DefineMethod(m.Name, MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.RTSpecialName, CallingConventions.HasThis,
+                m.ReturnType, paramterList.Select(x => x.ParameterType).ToArray());
+                //定义方法实现内容
+                ILGenerator gen = tm.GetILGenerator();
+                ExecuteType executeType = m_fun.ExecuteType;
+                GetExecuteType(m, ref executeType);
+                bool user_cache = m_fun.UserCache;
+                bool user_tran = m_fun.UseTransaction;
+                LocalBuilder result_builder = gen.DeclareLocal(m.ReturnType);//定义返回变量
+                LocalBuilder sqlText_bulider = gen.DeclareLocal(typeof(string));//定义Sql语句变量
+                LocalBuilder sqlConnection_bulider = gen.DeclareLocal(typeof(string));//定义数据库连接变量
+                LocalBuilder hasCache_bulider = gen.DeclareLocal(typeof(bool));//定义是否存在缓存变量
+                LocalBuilder dbNetProvider = gen.DeclareLocal(typeof(IDbNetProvider));//定义数据库提供程序变量
+                LocalBuilder cacheProvider = gen.DeclareLocal(typeof(IDbNetCacheProvider));//定义缓存提供程序变量
+                LocalBuilder exceptionBulider = gen.DeclareLocal(typeof(Exception));//定义异常变量，使用try catch
+                LocalBuilder paramterBulider = gen.DeclareLocal(typeof(DbNetParamterCollection));//定义封装参数的集合变量
+                gen.BeginExceptionBlock();//try开始
+                if (user_cache)
+                {
+                    //若存在缓存，创建缓存提供程序
+                    gen.Emit(OpCodes.Newobj, configuration.CacheProviderType.GetConstructor(Type.EmptyTypes));
+                    gen.Emit(OpCodes.Stloc, cacheProvider);
+                }
+
+                //初始化参数集合
+                gen.Emit(OpCodes.Newobj, typeof(DbNetParamterCollection).GetConstructor(Type.EmptyTypes));
+                gen.Emit(OpCodes.Stloc, paramterBulider);
+
+                #region 获取输入参数
+
+                GetParamters(paramterList, gen, paramterBulider);
+
+                #endregion
+
+                #region 创建路由获取数据库连接以及数据库提供程序
+
+                if (configuration.DbProvider != null)
+                {
+                    //创建默认的提供程序
+                    gen.Emit(OpCodes.Newobj, configuration.DbProvider.GetConstructor(Type.EmptyTypes));
+                    gen.Emit(OpCodes.Stloc, dbNetProvider);
+                }
+
+                //执行路由中的方法RouteDbConnection
+                LocalBuilder route_bulider = gen.DeclareLocal(m_route_type);
+                gen.Emit(OpCodes.Newobj, m_route_type.GetConstructor(Type.EmptyTypes));
+                gen.Emit(OpCodes.Stloc, route_bulider);
+                gen.Emit(OpCodes.Ldloc, route_bulider);
+                gen.Emit(OpCodes.Ldstr, route_name);
+                gen.Emit(OpCodes.Ldstr, function_type.Name);
+                gen.Emit(OpCodes.Ldstr, m.Name);
+                gen.Emit(OpCodes.Ldloc, paramterBulider);
+                gen.Emit(OpCodes.Ldloca, dbNetProvider.LocalIndex);
+                gen.Emit(OpCodes.Call, MethodHelper.dbNetRouteMethod);
+                gen.Emit(OpCodes.Stloc, sqlConnection_bulider);
+                #endregion
+                gen.BeginCatchBlock(typeof(Exception));
+                //catch处理
+                gen.Emit(OpCodes.Stloc, exceptionBulider);
+                gen.Emit(OpCodes.Ldloc, exceptionBulider);
+                gen.Emit(OpCodes.Call, MethodHelper.exceptionMethod);
+                gen.EndExceptionBlock();
+
+                //若有out参数返回值在此处理
+                //若存在缓存在此处理
+                //若存在事务在此处理
+
+                #region 返回结果
+                if (m.ReturnType != null)
+                {
+                    gen.Emit(OpCodes.Ldloc, result_builder);
+                }
+                gen.Emit(OpCodes.Ret);
+                #endregion
+
+                #endregion
             }
-            
+            var t = tb.CreateType();
+            cache_imp.TryAdd(function_type, Activator.CreateInstance(t));
+
         }
 
         /// <summary>
@@ -187,8 +183,8 @@ namespace DbNet
                 Type pType = paramter.ParameterType;
                 LocalBuilder pTypeBulider = null;
                 DbNetParamterDirection dir = DbNetParamterDirection.Input;
-                if (pType != typeof(DbNetScope) &&
-                    pType != typeof(DbNetScope).MakeByRefType())
+                if (pType != typeof(IDbNetScope) &&
+                    pType != typeof(IDbNetScope).MakeByRefType())
                 {
                     if (!paramter.IsOut &&
                         !pType.IsByRef)
@@ -208,25 +204,31 @@ namespace DbNet
                         }
                     }
                     gen.Emit(OpCodes.Stloc, pTypeBulider);
+                    if (pTypeBulider.LocalType.IsClass)
+                    {
+                        Label isNullLabel = gen.DefineLabel();
+                        gen.Emit(OpCodes.Ldloc, pTypeBulider);
+                        gen.Emit(OpCodes.Ldnull);
+                        gen.Emit(OpCodes.Ceq);
+                        gen.Emit(OpCodes.Brfalse, isNullLabel);
+                        gen.Emit(OpCodes.Call, MethodHelper.defaultMethod.MakeGenericMethod(pTypeBulider.LocalType));
+                        gen.Emit(OpCodes.Stloc, pTypeBulider);
+                        gen.MarkLabel(isNullLabel);
+                    }
                     if (paramter.IsOut)
                     {
                         dir = DbNetParamterDirection.Output;
                         //初始化赋值输出参数
                         gen.Emit(OpCodes.Call, MethodHelper.defaultMethod.MakeGenericMethod(pTypeBulider.LocalType));
                         gen.Emit(OpCodes.Stloc, pTypeBulider);
+                        gen.Emit(OpCodes.Ldarg, paramter.Position + 1);
                         gen.Emit(OpCodes.Ldloc, pTypeBulider);
                         SetRef(gen, pTypeBulider.LocalType);
                     }
-                    Label isNullLabel = gen.DefineLabel();
-                    gen.Emit(OpCodes.Ldloc, pTypeBulider);
-                    gen.Emit(OpCodes.Ldnull);
-                    gen.Emit(OpCodes.Ceq);
-                    gen.Emit(OpCodes.Brfalse, isNullLabel);
-                    gen.Emit(OpCodes.Call, MethodHelper.defaultMethod.MakeGenericMethod(pTypeBulider.LocalType));
-                    gen.Emit(OpCodes.Stloc, pTypeBulider);
-                    gen.MarkLabel(isNullLabel);
                 }
-                if (pType == typeof(string) || pType.IsValueType)
+                if (pTypeBulider.LocalType == typeof(string) || 
+                    pTypeBulider.LocalType.IsValueType||
+                    pTypeBulider.LocalType.IsArray)
                 {
                     //添加结构体或者string到集合
                     gen.Emit(OpCodes.Ldloc, paramterListBulider);
@@ -247,6 +249,14 @@ namespace DbNet
                         bool except = false;
                         string name = string.Empty;
                         DbNetParamterDirection pdir = DbNetParamterDirection.Input;
+                        if (paramter.IsOut)
+                        {
+                            pdir = DbNetParamterDirection.Output;
+                        }
+                        else if (pType.IsByRef)
+                        {
+                            pdir = DbNetParamterDirection.InputAndOutPut;
+                        }
                         if (attr_p != null)
                         {
                             except = attr_p.Except;

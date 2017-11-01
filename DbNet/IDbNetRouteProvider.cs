@@ -5,10 +5,9 @@ using System.Text;
 namespace DbNet
 {
     /// <summary>
-    /// 数据库路由提供程序
-    /// 用于分布式处理
+    /// 表示数据库路由提供程序接口
     /// </summary>
-    public abstract class DbNetRouteProvider
+    public interface IDbNetRouteProvider
     {
         /// <summary>
         /// 依据传入的关键字，指向不同的数据库或数据库连接
@@ -19,6 +18,6 @@ namespace DbNet
         /// <param name="paramters">路由参数值集合</param>
         /// <param name="dbProvider">返回数据库提供程序</param>
         /// <returns>返回数据库连接，若不存在返回null或者空字符串将选择默认的数据库连接</returns>
-        public abstract string RouteDbConnection(string routeName,string moduleName,string methodName,Dictionary<string,object> paramters,ref DbNetProvider dbProvider);
+        string RouteDbConnection(string routeName, string moduleName, string methodName, DbNetParamterCollection paramters, ref IDbNetProvider dbProvider);
     }
 }

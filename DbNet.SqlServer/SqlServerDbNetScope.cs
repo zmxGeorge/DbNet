@@ -9,7 +9,7 @@ using System.Data.SqlClient;
 
 namespace DbNet
 {
-    public class SqlServerDbNetScope : DbNetScope
+    public class SqlServerDbNetScope : IDbNetScope
     {
         private string _connection_string = null;
 
@@ -26,7 +26,7 @@ namespace DbNet
             _isolationLevel = isolationLevel;
         }
 
-        public override void Close()
+        public void Close()
         {
             if (Transaction == null)
             {
@@ -34,7 +34,7 @@ namespace DbNet
             }
         }
 
-        public override void Commit()
+        public void Commit()
         {
             if (Transaction != null)
             {
@@ -42,7 +42,7 @@ namespace DbNet
             }
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             if (Transaction != null)
             {
@@ -59,7 +59,7 @@ namespace DbNet
         /// 注意，若外部传入的事务级别与当前事务级别不同
         /// 则事务会被提交并创建新事务
         /// </summary>
-        public override void Open()
+        public void Open()
         {
             if (Connection == null)
             {
@@ -117,7 +117,7 @@ namespace DbNet
             }
         }
 
-        public override void Rollback()
+        public void Rollback()
         {
             if (Transaction != null)
             {

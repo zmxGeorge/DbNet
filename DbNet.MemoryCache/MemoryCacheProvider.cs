@@ -8,13 +8,13 @@ using System.Runtime.Caching;
 
 namespace DbNet
 {
-    public class MemoryCacheProvider : DbNetCacheProvider
+    public class MemoryCacheProvider : IDbNetCacheProvider
     {
         private static readonly System.Runtime.Caching.MemoryCache _memoryCache = new System.Runtime.Caching.MemoryCache("db_cache");
 
         private static readonly ConcurrentDictionary<string, SQLCacheItem> m_cache = new ConcurrentDictionary<string, SQLCacheItem>();
 
-        public override void AddCache(string cacheKey, SQLCacheItem cacheItem, int cacheTime, int duringTime)
+        public void AddCache(string cacheKey, SQLCacheItem cacheItem, int cacheTime, int duringTime)
         {
             if (cacheTime == -1)
             {
@@ -33,7 +33,7 @@ namespace DbNet
             }
         }
 
-        public override SQLCacheItem GetCache(string cacheKey, out bool hasCache)
+        public SQLCacheItem GetCache(string cacheKey, out bool hasCache)
         {
             if (m_cache.ContainsKey(cacheKey))
             {

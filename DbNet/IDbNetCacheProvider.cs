@@ -7,7 +7,7 @@ namespace DbNet
     /// <summary>
     /// 缓存提供程序
     /// </summary>
-    public abstract class DbNetCacheProvider
+    public interface IDbNetCacheProvider
     {
         /// <summary>
         /// 获取缓存
@@ -15,7 +15,7 @@ namespace DbNet
         /// <param name="cacheKey"></param>
         /// <param name="hasCache"></param>
         /// <returns></returns>
-        public abstract SQLCacheItem GetCache(string cacheKey, out bool hasCache);
+        SQLCacheItem GetCache(string cacheKey, out bool hasCache);
 
         /// <summary>
         /// 添加缓存
@@ -24,6 +24,6 @@ namespace DbNet
         /// <param name="cacheItem"></param>
         /// <param name="cacheTime"></param>
         /// <param name="duringTime"></param>
-        public abstract void AddCache(string cacheKey, SQLCacheItem cacheItem, int cacheTime, int duringTime);
+        void AddCache(string cacheKey, SQLCacheItem cacheItem, int cacheTime, int duringTime);
     }
 }

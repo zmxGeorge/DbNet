@@ -44,7 +44,7 @@ namespace DbNet
         /// </summary>
         /// <typeparam name="TDbProvider"></typeparam>
         public static void AddDbProvider<TDbProvider>()
-            where TDbProvider : DbNetProvider
+            where TDbProvider : IDbNetProvider
         {
             _configuration._dbProviderType = typeof(TDbProvider);
         }
@@ -54,7 +54,7 @@ namespace DbNet
         /// </summary>
         /// <typeparam name="TCacheProvider"></typeparam>
         public static void AddCacheProvider<TCacheProvider>()
-            where TCacheProvider : DbNetCacheProvider
+            where TCacheProvider : IDbNetCacheProvider
         {
             _configuration._cacheProviderType = typeof(TCacheProvider);
         }
@@ -64,10 +64,10 @@ namespace DbNet
         /// </summary>
         /// <typeparam name="TFunctionProvider"></typeparam>
         /// <param name="provider"></param>
-        public static void AddFunctionProvider<TFunctionProvider>(TFunctionProvider provider)
-            where TFunctionProvider : DbNetFunctionProvider
+        public static void AddFunctionProvider<TFunctionProvider>()
+            where TFunctionProvider : DbNetFunctionProvider,new()
         {
-            _configuration._dbNetFunctionProvider = provider;
+            _configuration._dbNetFunctionProvider = new TFunctionProvider();
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace DbNet
         /// <typeparam name="TDbProvider">对应的数据库提供程序</typeparam>
         /// <param name="routeName">路由名称</param>
         public static void MapRoute<TDbRouteProvider>(string routeName)
-            where TDbRouteProvider : DbNetRouteProvider,new()
+            where TDbRouteProvider : IDbNetRouteProvider,new()
         {
             if (_configuration._route_map.ContainsKey(routeName)&&
                 routeName!="*")

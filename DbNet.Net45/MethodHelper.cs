@@ -11,10 +11,13 @@ namespace DbNet
 {
     public static class MethodHelper
     {
-        public static readonly MethodInfo dbNetRouteMethod = typeof(DbNetRouteProvider).GetMethod("RouteDbConnection", BindingFlags.Instance | BindingFlags.Public);
+        public static readonly MethodInfo dbNetRouteMethod = typeof(IDbNetRouteProvider).GetMethod("RouteDbConnection", BindingFlags.Instance | BindingFlags.Public);
+
         public static readonly MethodInfo paramterMethod = typeof(DbNetParamterCollection).GetMethod("Add", BindingFlags.Instance | BindingFlags.Public);
 
         public static readonly MethodInfo defaultMethod = typeof(MethodHelper).GetMethod("GetDefaultValue", BindingFlags.Static | BindingFlags.Public);
+
+        public static readonly MethodInfo exceptionMethod = typeof(DbContext).GetMethod("RaiseEvent", BindingFlags.Static | BindingFlags.Public);
 
         public static T ParseResult<T>(object obj) where T : new()
         {
@@ -28,7 +31,14 @@ namespace DbNet
         /// <returns></returns>
         public static T GetDefaultValue<T>()
         {
-            return Activator.CreateInstance<T>();
+            if (typeof(T).IsArray)
+            {
+                return default(T);
+            }
+            else
+            {
+                return Activator.CreateInstance<T>();
+            }
         }
     }
 }

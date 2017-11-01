@@ -22,5 +22,13 @@ namespace DbNet
         /// </summary>
         public static event ExecuteException SqlException;
 
+        public static void RaiseEvent(Exception e)
+        {
+            if (SqlException != null)
+            {
+                SqlException(e);
+            }
+        }
+
     }
 }
