@@ -295,11 +295,11 @@ namespace DbNet
                             p_cacheKeyType = CacheKeyType.Bind;
                             if (haschache_attr)
                             {
-                                cacheKeyType = CacheKeyType.None;
+                                p_cacheKeyType = CacheKeyType.None;
                             }
                             if (cache_attr_c != null)
                             {
-                                cacheKeyType = CacheKeyType.Bind;
+                                p_cacheKeyType = CacheKeyType.Bind;
                             }
                             if (attr_p != null&&attr_p.CacheKey!=CacheKeyType.Default)
                             {

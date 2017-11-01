@@ -27,6 +27,6 @@ namespace Test
     {
         [DbFunction(SqlText ="select * from user username=@name password=@password",
             ExecuteType =ExecuteType.ExecuteObject,CommandType ="SqlText",UserCache =true)]
-        string LoginUser(string name,string password,[DbCacheKey]int id,DateTime dateTime,byte[] data,Guid guid,ref M m);
+        string LoginUser(string name,string password,[DbCacheKey]int id,DateTime dateTime,byte[] data,Guid guid, [DbCacheKey]ref M m);
     }
 }
