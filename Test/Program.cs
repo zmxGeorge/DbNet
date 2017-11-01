@@ -13,6 +13,7 @@ namespace Test
         static void Main(string[] args)
         {
             SqlServerSimpleDbRouteProvider.SetDefaultConnectionString("Data Source = 123.207.183.51;Initial Catalog = yiqi_formal;User Id = dbtest;Password = q1w2e3r4;");
+            DbNetConfiguration.AddDbProvider<SqlServerDbProvider>();
             DbNetConfiguration.MapRoute<SqlServerSimpleDbRouteProvider>("*");
             DbNetConfiguration.AddCacheProvider<MemoryCacheProvider>();
             DbNetConfiguration.AddFunctionProvider<ILDbNetFunctionProvider>();

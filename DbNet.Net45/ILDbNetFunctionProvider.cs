@@ -115,35 +115,9 @@ namespace DbNet
                 //初始化参数集合
                 gen.Emit(OpCodes.Newobj, typeof(DbNetParamterCollection).GetConstructor(Type.EmptyTypes));
                 gen.Emit(OpCodes.Stloc, paramterBulider);
-
-                #region 获取输入参数
-
                 GetParamters(paramterList, gen, paramterBulider);
+                MapRouteAndProvider(configuration, route_name, function_type, m, m_route_type, gen, sqlConnection_bulider, dbNetProvider, paramterBulider);
 
-                #endregion
-
-                #region 创建路由获取数据库连接以及数据库提供程序
-
-                if (configuration.DbProvider != null)
-                {
-                    //创建默认的提供程序
-                    gen.Emit(OpCodes.Newobj, configuration.DbProvider.GetConstructor(Type.EmptyTypes));
-                    gen.Emit(OpCodes.Stloc, dbNetProvider);
-                }
-
-                //执行路由中的方法RouteDbConnection
-                LocalBuilder route_bulider = gen.DeclareLocal(m_route_type);
-                gen.Emit(OpCodes.Newobj, m_route_type.GetConstructor(Type.EmptyTypes));
-                gen.Emit(OpCodes.Stloc, route_bulider);
-                gen.Emit(OpCodes.Ldloc, route_bulider);
-                gen.Emit(OpCodes.Ldstr, route_name);
-                gen.Emit(OpCodes.Ldstr, function_type.Name);
-                gen.Emit(OpCodes.Ldstr, m.Name);
-                gen.Emit(OpCodes.Ldloc, paramterBulider);
-                gen.Emit(OpCodes.Ldloca, dbNetProvider.LocalIndex);
-                gen.Emit(OpCodes.Call, MethodHelper.dbNetRouteMethod);
-                gen.Emit(OpCodes.Stloc, sqlConnection_bulider);
-                #endregion
                 gen.BeginCatchBlock(typeof(Exception));
                 //catch处理
                 gen.Emit(OpCodes.Stloc, exceptionBulider);
@@ -168,6 +142,55 @@ namespace DbNet
             var t = tb.CreateType();
             cache_imp.TryAdd(function_type, Activator.CreateInstance(t));
 
+        }
+
+        /// <summary>
+        /// 创建路由获取数据库连接以及数据库提供程序
+        /// </summary>
+        /// <param name="configuration"></param>
+        /// <param name="route_name"></param>
+        /// <param name="function_type"></param>
+        /// <param name="m"></param>
+        /// <param name="m_route_type"></param>
+        /// <param name="gen"></param>
+        /// <param name="sqlConnection_bulider"></param>
+        /// <param name="dbNetProvider"></param>
+        /// <param name="paramterBulider"></param>
+        private static void MapRouteAndProvider(DbNetConfiguration configuration, string route_name, Type function_type, MethodInfo m, Type m_route_type, ILGenerator gen, LocalBuilder sqlConnection_bulider, LocalBuilder dbNetProvider, LocalBuilder paramterBulider)
+        {
+            //执行路由中的方法RouteDbConnection
+            LocalBuilder route_bulider = gen.DeclareLocal(m_route_type);
+            gen.Emit(OpCodes.Newobj, m_route_type.GetConstructor(Type.EmptyTypes));
+            gen.Emit(OpCodes.Stloc, route_bulider);
+            gen.Emit(OpCodes.Ldloc, route_bulider);
+            gen.Emit(OpCodes.Ldstr, route_name);
+            gen.Emit(OpCodes.Ldstr, function_type.Name);
+            gen.Emit(OpCodes.Ldstr, m.Name);
+            gen.Emit(OpCodes.Ldloc, paramterBulider);
+            gen.Emit(OpCodes.Ldloca, dbNetProvider.LocalIndex);
+            gen.Emit(OpCodes.Call, MethodHelper.dbNetRouteMethod);
+            gen.Emit(OpCodes.Stloc, sqlConnection_bulider);
+            if (configuration.DbProvider != null)
+            {
+                //执行路由结束，判断返回的数据库提供程序是否为null，若为null则根据默认设置创建数据库提供程序
+                Label dbProviderNullLabel = gen.DefineLabel();
+                gen.Emit(OpCodes.Ldloc, dbNetProvider);
+                gen.Emit(OpCodes.Ldnull);
+                gen.Emit(OpCodes.Ceq);
+                gen.Emit(OpCodes.Brfalse, dbProviderNullLabel);
+                //创建默认的提供程序
+                gen.Emit(OpCodes.Newobj, configuration.DbProvider.GetConstructor(Type.EmptyTypes));
+                gen.Emit(OpCodes.Stloc, dbNetProvider);
+                gen.MarkLabel(dbProviderNullLabel);
+            }
+            //若不存在默认设置则抛出异常
+            Label dbProviderNullLabel_two = gen.DefineLabel();
+            gen.Emit(OpCodes.Ldloc, dbNetProvider);
+            gen.Emit(OpCodes.Ldnull);
+            gen.Emit(OpCodes.Ceq);
+            gen.Emit(OpCodes.Brfalse, dbProviderNullLabel_two);
+            gen.ThrowException(typeof(DbProviderNotFoundException));
+            gen.MarkLabel(dbProviderNullLabel_two);
         }
 
         /// <summary>

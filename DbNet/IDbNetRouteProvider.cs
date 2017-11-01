@@ -18,6 +18,6 @@ namespace DbNet
         /// <param name="paramters">路由参数值集合</param>
         /// <param name="dbProvider">返回数据库提供程序</param>
         /// <returns>返回数据库连接，若不存在返回null或者空字符串将选择默认的数据库连接</returns>
-        string RouteDbConnection(string routeName, string moduleName, string methodName, DbNetParamterCollection paramters, ref IDbNetProvider dbProvider);
+        string RouteDbConnection(string routeName, string moduleName, string methodName, DbNetParamterCollection paramters, out IDbNetProvider dbProvider);
     }
 }

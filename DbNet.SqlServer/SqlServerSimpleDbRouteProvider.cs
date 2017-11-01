@@ -25,16 +25,13 @@ namespace DbNet
             _connectionString = connectionString;
         }
 
-        public string RouteDbConnection(string routeName, string moduleName, string methodName, DbNetParamterCollection paramters, ref IDbNetProvider dbProvider)
+        public string RouteDbConnection(string routeName, string moduleName, string methodName, DbNetParamterCollection paramters, out IDbNetProvider dbProvider)
         {
             if (string.IsNullOrEmpty(_connectionString))
             {
                 throw new Exception("默认数据库连接字符串未设置");
             }
-            if (dbProvider == null)
-            {
-                dbProvider = _dbProvider;
-            }
+            dbProvider = _dbProvider;
             return _connectionString;
         }
     }
