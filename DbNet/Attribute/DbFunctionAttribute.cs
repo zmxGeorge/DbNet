@@ -13,7 +13,6 @@ namespace DbNet
         public DbFunctionAttribute()
         {
             CommandType = string.Empty;
-            IsolationLevel = DbNetIsolationLevel.None;
             UseTransaction = false;
             CacheTime = 0;
             ExecuteType = ExecuteType.Default;
@@ -48,7 +47,7 @@ namespace DbNet
         /// <summary>
         /// 若使用事务设置此参数
         /// </summary>
-        public DbNetIsolationLevel IsolationLevel { get; set; }
+        public string IsolationLevel { get; set; }
 
         /// <summary>
         /// 缓存关键字

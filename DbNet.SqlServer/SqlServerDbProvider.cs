@@ -16,10 +16,12 @@ namespace DbNet
         {
         }
 
-        public object ExecuteCommand<TResult>(DbNetCommand command, IDbNetScope scope, ExecuteType executetype)
+        public TResult ExecuteCommand<TResult>(DbNetCommand command, IDbNetScope scope, ExecuteType executetype)
         {
             //封装数据库执行
             object result = null;
+            result = 1;
+            return (TResult)result;
             scope = GetScope(scope,command);
             scope.Open();
             var s = scope as SqlServerDbNetScope;
@@ -64,10 +66,10 @@ namespace DbNet
                     break;
             }
             scope.Close();
-            return result;
+            return (TResult)result;
         }
 
-        public IDbNetScope GetScope(IDbNetScope scope,DbNetCommand command)
+        private IDbNetScope GetScope(IDbNetScope scope,DbNetCommand command)
         {
             if (scope != null&&scope is SqlServerDbNetScope)
             {

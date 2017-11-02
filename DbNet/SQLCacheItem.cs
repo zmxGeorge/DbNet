@@ -9,30 +9,30 @@ namespace DbNet
     /// </summary>
     public class SQLCacheItem
     {
-        private readonly DbNetCommand _dbNetCommand;
+        private DbNetCommand _dbNetCommand;
 
-        private readonly object _result;
+        private object _result;
 
-        public SQLCacheItem(DbNetCommand command, object result)
+        public SQLCacheItem()
+        {
+            
+        }
+
+        public void SetItem<TResult>(DbNetCommand command, TResult result)
         {
             _dbNetCommand = command;
             _result = result;
         }
 
         /// <summary>
-        /// 获取参数缓存的值
+        /// 获取缓存的参数
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="paramterKey"></param>
         /// <returns></returns>
-        public T GetParamterValue<T>(string paramterKey)
+        public DbNetParamterCollection GetParamters()
         {
-            if (_dbNetCommand == null)
-            {
-                return default(T);
-            }
-            return (T)Convert.ChangeType(_dbNetCommand.Paramters.Get(paramterKey), typeof(T));
+            return _dbNetCommand.Paramters;
         }
+
 
         /// <summary>
         /// 获取结果集

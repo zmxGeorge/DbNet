@@ -42,15 +42,8 @@ namespace DbNet
         /// <param name="scope">执行范围</param>
         /// <param name="executeType">执行类型</param>
         /// <returns></returns>
-       object ExecuteCommand<TResult>(DbNetCommand command, IDbNetScope scope, ExecuteType executeType);
+        TResult ExecuteCommand<TResult>(DbNetCommand command, IDbNetScope scope, ExecuteType executeType);
 
-        /// <summary>
-        /// 获取一个可用的执行范围
-        /// </summary>
-        /// <param name="scope">可能由外部传入的值</param>
-        /// <param name="command">执行命令</param>
-        /// <returns></returns>
-        IDbNetScope GetScope(IDbNetScope scope, DbNetCommand command);
 
     }
 }

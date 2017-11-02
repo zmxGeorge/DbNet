@@ -22,6 +22,10 @@ namespace DbNet
         /// </summary>
         public static event ExecuteException SqlException;
 
+        /// <summary>
+        /// 触发事件
+        /// </summary>
+        /// <param name="e"></param>
         public static void RaiseEvent(Exception e)
         {
             if (SqlException != null)
@@ -29,6 +33,5 @@ namespace DbNet
                 SqlException(e);
             }
         }
-
     }
 }

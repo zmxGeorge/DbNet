@@ -20,7 +20,8 @@ namespace Test
             DbNetConfiguration.RegistFunction<IUser>();
             var user = DbNetConfiguration.GetFunction<IUser>();
             M m = null;
-            user.LoginUser("name", "pwd",0,DateTime.Now,null,Guid.NewGuid(),ref m);
+            SqlServerDbNetScope a1 = null;
+            var r=user.LoginUser("name23123", "pwd",0,DateTime.Now,null,Guid.NewGuid(),ref m,out a1);
         }
     }
 }

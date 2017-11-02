@@ -13,6 +13,8 @@ namespace DbNet
     {
         private const string KEY_FORMAT = "{1}Imp_{0}";
 
+        private const string SCOPE_ITEM = "DbNet.IDbNetScope";
+
         private readonly AssemblyBuilder ass_bulider;
 
         private readonly ModuleBuilder module_bulider;
@@ -90,6 +92,11 @@ namespace DbNet
                 var paramterList = m.GetParameters();
                 var tm = tb.DefineMethod(m.Name, MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.RTSpecialName, CallingConventions.HasThis,
                 m.ReturnType, paramterList.Select(x => x.ParameterType).ToArray());
+                if (paramterList.Count(x => (x.ParameterType.GetInterface(SCOPE_ITEM) != null ||
+                   (x.ParameterType.GetElementType()!=null&&x.ParameterType.GetElementType().GetInterface(SCOPE_ITEM) != null))) > 1)
+                {
+                    throw new Exception("参数中实现IDbNetScope接口类型的参数不能超过一个");
+                }
                 //定义方法实现内容
                 ILGenerator gen = tm.GetILGenerator();
                 ExecuteType executeType = m_fun.ExecuteType;
@@ -99,12 +106,25 @@ namespace DbNet
                 LocalBuilder result_builder = gen.DeclareLocal(m.ReturnType);//定义返回变量
                 LocalBuilder sqlText_bulider = gen.DeclareLocal(typeof(string));//定义Sql语句变量
                 LocalBuilder sqlConnection_bulider = gen.DeclareLocal(typeof(string));//定义数据库连接变量
+                LocalBuilder cacheKey_bulider = gen.DeclareLocal(typeof(string));//定义缓存键变量
+                LocalBuilder cacheItem_bulider = gen.DeclareLocal(typeof(SQLCacheItem));//定义缓存对象变量
+                LocalBuilder netScope_bulider = gen.DeclareLocal(typeof(IDbNetScope));//定义NetScope
                 LocalBuilder hasCache_bulider = gen.DeclareLocal(typeof(bool));//定义是否存在缓存变量
                 LocalBuilder dbNetProvider = gen.DeclareLocal(typeof(IDbNetProvider));//定义数据库提供程序变量
                 LocalBuilder cacheProvider = gen.DeclareLocal(typeof(IDbNetCacheProvider));//定义缓存提供程序变量
                 LocalBuilder exceptionBulider = gen.DeclareLocal(typeof(Exception));//定义异常变量，使用try catch
                 LocalBuilder paramterBulider = gen.DeclareLocal(typeof(DbNetParamterCollection));//定义封装参数的集合变量
+                LocalBuilder hasCacheBulider = gen.DeclareLocal(typeof(bool));//定义是否存在缓存的变量
+                LocalBuilder commandBulider = gen.DeclareLocal(typeof(DbNetCommand));//定义是否存在缓存的变量
+
+                Label end_label = gen.DefineLabel();//指向执行结束的标签
+
                 gen.BeginExceptionBlock();//try开始
+
+                //初始化定义缓存是否存在的变量
+                gen.Emit(OpCodes.Ldc_I4_0);
+                gen.Emit(OpCodes.Stloc, hasCacheBulider);
+
                 if (user_cache)
                 {
                     //若存在缓存，创建缓存提供程序
@@ -115,9 +135,109 @@ namespace DbNet
                 //初始化参数集合
                 gen.Emit(OpCodes.Newobj, typeof(DbNetParamterCollection).GetConstructor(Type.EmptyTypes));
                 gen.Emit(OpCodes.Stloc, paramterBulider);
-                GetParamters(paramterList, gen, paramterBulider,user_cache);
-                MapRouteAndProvider(configuration, route_name, function_type, m, m_route_type, gen, sqlConnection_bulider, dbNetProvider, paramterBulider);
+                ParameterInfo scopeParemterInfo = null;
+                string sqlTextKey = null;
+                if (m_fun != null)
+                {
+                    sqlTextKey = m_fun.SqlTextKey;
+                }
+                GetParamters(paramterList, gen, paramterBulider, user_cache, sqlTextKey,out scopeParemterInfo);
 
+                //sql语句处理
+                string sqlText = m.Name;
+                if (m_fun != null && !string.IsNullOrEmpty(m_fun.SqlText))
+                {
+                    sqlText = m_fun.SqlText;
+                    gen.Emit(OpCodes.Ldstr, sqlText);
+                }
+                else if (m_fun != null && !string.IsNullOrEmpty(sqlTextKey))
+                {
+                    var paramter = paramterList.FirstOrDefault(x => x.Name == sqlTextKey);
+                    if (paramter == null)
+                    {
+                        throw new Exception("未能找到指定sql语句的参数，名称:"+ sqlTextKey);
+                    }
+                    if (paramter.ParameterType != typeof(string))
+                    {
+                        throw new Exception("指定sql语句的参数类型必须为string");
+                    }
+                    gen.Emit(OpCodes.Ldarg, paramter.Position + 1);
+                }
+                gen.Emit(OpCodes.Stloc, sqlText_bulider);
+
+                MapRouteAndProvider(configuration, route_name, function_type, m, m_route_type, gen, sqlConnection_bulider, dbNetProvider, paramterBulider);
+                SetCache(m.ReturnType,function_type.Name,m.Name,sqlText_bulider,gen, user_cache, result_builder, cacheKey_bulider,
+                    cacheItem_bulider, cacheProvider, paramterBulider, hasCacheBulider, end_label);
+                string commandType = string.Empty;
+                if (m_fun != null)
+                {
+                    commandType = m_fun.CommandType;
+                }
+                //建立Command
+                gen.Emit(OpCodes.Ldloc, sqlText_bulider);
+                gen.Emit(OpCodes.Ldloc, sqlConnection_bulider);
+                gen.Emit(OpCodes.Ldloc, paramterBulider);
+                gen.Emit(OpCodes.Ldstr, commandType);
+                if (m_fun == null || string.IsNullOrEmpty(m_fun.IsolationLevel))
+                {
+                    gen.Emit(OpCodes.Ldsfld, MethodHelper.none_level);
+                }
+                else
+                {
+                    gen.Emit(OpCodes.Ldstr, m_fun.IsolationLevel);
+                    gen.Emit(OpCodes.Newobj, MethodHelper.level_bulid);
+                }
+                gen.Emit(OpCodes.Newobj, MethodHelper.command_bulid_Method);
+                gen.Emit(OpCodes.Stloc, commandBulider);
+                //处理NetScope
+                if (scopeParemterInfo != null)
+                {
+                    gen.Emit(OpCodes.Ldarg, scopeParemterInfo.Position + 1);
+                    if (scopeParemterInfo.ParameterType.IsByRef)
+                    {
+                        gen.Emit(OpCodes.Ldind_Ref);
+                    }
+                    gen.Emit(OpCodes.Stloc, netScope_bulider);
+                }
+                //执行命令
+                gen.Emit(OpCodes.Ldloc, dbNetProvider);
+                gen.Emit(OpCodes.Ldloc, commandBulider);
+                gen.Emit(OpCodes.Ldloc, netScope_bulider);
+                gen.Emit(OpCodes.Ldc_I4, (int)executeType);
+                gen.Emit(OpCodes.Call, MethodHelper.db_exec_Method.MakeGenericMethod(new Type[] { m.ReturnType}));
+                gen.Emit(OpCodes.Stloc, result_builder);
+                //若存在scope输出参数则赋值
+                if (scopeParemterInfo != null &&
+                    (scopeParemterInfo.IsOut ||
+                    scopeParemterInfo.ParameterType.IsByRef))
+                {
+                    gen.Emit(OpCodes.Ldarg, scopeParemterInfo.Position + 1);
+                    gen.Emit(OpCodes.Ldloc, netScope_bulider);
+                    gen.Emit(OpCodes.Stind_Ref);
+                }
+                //缓存添加
+                if (user_cache)
+                {
+                    int dtime = 0;
+                    int ntime = 0;
+                    if (m_fun != null)
+                    {
+                        dtime = m_fun.DuringTime;
+                        ntime = m_fun.CacheTime;
+                    }
+                    gen.Emit(OpCodes.Ldloc, commandBulider);
+                    gen.Emit(OpCodes.Ldloc, result_builder);
+                    gen.Emit(OpCodes.Newobj, typeof(SQLCacheItem).GetConstructor(Type.EmptyTypes));
+                    gen.Emit(OpCodes.Stloc, cacheItem_bulider);
+                    gen.Emit(OpCodes.Ldloc, cacheItem_bulider);
+                    gen.Emit(OpCodes.Call, MethodHelper.cache_item_bulid.MakeGenericMethod(new Type[] { m.ReturnType }));
+                    gen.Emit(OpCodes.Ldloc, cacheProvider);
+                    gen.Emit(OpCodes.Ldloc, cacheKey_bulider);
+                    gen.Emit(OpCodes.Ldloc, cacheItem_bulider);
+                    gen.Emit(OpCodes.Ldc_I4, ntime);
+                    gen.Emit(OpCodes.Ldc_I4, dtime);
+                    gen.Emit(OpCodes.Call, MethodHelper.cache_addCacheMethod);
+                }
                 gen.BeginCatchBlock(typeof(Exception));
                 //catch处理
                 gen.Emit(OpCodes.Stloc, exceptionBulider);
@@ -125,9 +245,9 @@ namespace DbNet
                 gen.Emit(OpCodes.Call, MethodHelper.exceptionMethod);
                 gen.EndExceptionBlock();
 
+                gen.MarkLabel(end_label);
+
                 //若有out参数返回值在此处理
-                //若存在缓存在此处理
-                //若存在事务在此处理
 
                 #region 返回结果
                 if (m.ReturnType != null)
@@ -142,6 +262,63 @@ namespace DbNet
             var t = tb.CreateType();
             cache_imp.TryAdd(function_type, Activator.CreateInstance(t));
 
+        }
+
+        /// <summary>
+        /// 缓存执行设置
+        /// </summary>
+        /// <param name="gen"></param>
+        /// <param name="user_cache"></param>
+        /// <param name="result_builder"></param>
+        /// <param name="cacheKey_bulider"></param>
+        /// <param name="cacheItem_bulider"></param>
+        /// <param name="cacheProvider"></param>
+        /// <param name="paramterBulider"></param>
+        /// <param name="hasCacheBulider"></param>
+        /// <param name="end_label"></param>
+        private static void SetCache(Type returnType,string functionName,string methodName,LocalBuilder sqlTextBulider,ILGenerator gen, bool user_cache, LocalBuilder result_builder,
+            LocalBuilder cacheKey_bulider, LocalBuilder cacheItem_bulider, LocalBuilder cacheProvider, LocalBuilder paramterBulider, LocalBuilder hasCacheBulider, Label end_label)
+        {
+            Label cacheLabel = gen.DefineLabel();
+            if (user_cache)
+            {
+                #region 调用创建缓存键方法创建缓存键
+                gen.Emit(OpCodes.Ldloc, cacheProvider);
+                gen.Emit(OpCodes.Ldstr, functionName);
+                gen.Emit(OpCodes.Ldstr, methodName);
+                gen.Emit(OpCodes.Ldloc, sqlTextBulider);
+                gen.Emit(OpCodes.Ldloc, paramterBulider);
+                gen.Emit(OpCodes.Call, MethodHelper.cache_getKeyMethod);
+                gen.Emit(OpCodes.Stloc, cacheKey_bulider);
+                #endregion
+
+                #region 调用方法获取缓存，若获取到缓存则不执行数据库命令
+                gen.Emit(OpCodes.Ldloc, cacheProvider);
+                gen.Emit(OpCodes.Ldloc, cacheKey_bulider);
+                gen.Emit(OpCodes.Ldloca, hasCacheBulider);
+                gen.Emit(OpCodes.Call, MethodHelper.cache_getCacheMethod);
+                gen.Emit(OpCodes.Stloc, cacheItem_bulider);
+                gen.Emit(OpCodes.Ldloc, hasCacheBulider);
+                gen.Emit(OpCodes.Brfalse, cacheLabel);
+                #endregion
+            }
+            //根据缓存取值
+            Label cacheItemNullLabel = gen.DefineLabel();
+            //判断返回的SqlItem是否为空，若为空无需取值，直接返回
+            gen.Emit(OpCodes.Ldloc, cacheItem_bulider);
+            gen.Emit(OpCodes.Ldnull);
+            gen.Emit(OpCodes.Ceq);
+            gen.Emit(OpCodes.Brtrue, cacheItemNullLabel);
+            //取得SqlItem内的参数以及结果
+            gen.Emit(OpCodes.Ldloc, cacheItem_bulider);
+            gen.Emit(OpCodes.Call, MethodHelper.cacheItem_getParamters);
+            gen.Emit(OpCodes.Stloc, paramterBulider);
+            gen.Emit(OpCodes.Ldloc, cacheItem_bulider);
+            gen.Emit(OpCodes.Call, MethodHelper.cacheItem_getResult.MakeGenericMethod(returnType));
+            gen.Emit(OpCodes.Stloc, result_builder);
+            gen.MarkLabel(cacheItemNullLabel);
+            gen.Emit(OpCodes.Br, end_label);
+            gen.MarkLabel(cacheLabel);
         }
 
         /// <summary>
@@ -199,12 +376,26 @@ namespace DbNet
         /// <param name="paramterList"></param>
         /// <param name="gen"></param>
         /// <param name="paramterListBulider"></param>
-        private static void GetParamters(ParameterInfo[] paramterList, ILGenerator gen,LocalBuilder paramterListBulider,bool use_cache)
+        private static void GetParamters(ParameterInfo[] paramterList, ILGenerator gen,LocalBuilder paramterListBulider,bool use_cache,string sqlTextKey,out ParameterInfo scope_parameterInfo)
         {
+            scope_parameterInfo = null;
             bool haschache_attr = paramterList.Any(x => x.GetCustomAttribute<DbCacheKeyAttribute>() != null);
             foreach (var paramter in paramterList)
             {
+                if (!string.IsNullOrEmpty(sqlTextKey) && paramter.Name == sqlTextKey)
+                {
+                    //跳过指定sql语句的参数
+                    continue;
+                }
                 Type pType = paramter.ParameterType;
+                Type eType = pType.GetElementType();//若为ref或out参数则eType为其原来类型
+                if (pType.GetInterface(SCOPE_ITEM) != null||
+                    (eType!=null&&eType.GetInterface(SCOPE_ITEM) !=null))
+                {
+                    //IDbNetScope类型为事务处理变量，不能添加到参数中
+                    scope_parameterInfo = paramter;
+                    continue;
+                }
                 LocalBuilder pTypeBulider = null;
                 DbNetParamterDirection dir = DbNetParamterDirection.Input;
                 CacheKeyType cacheKeyType = CacheKeyType.None;
@@ -221,51 +412,47 @@ namespace DbNet
                         cacheKeyType = CacheKeyType.Bind;
                     }
                 }
-                if (pType != typeof(IDbNetScope) &&
-                    pType != typeof(IDbNetScope).MakeByRefType())
+                if (!paramter.IsOut &&
+                    !pType.IsByRef)
                 {
-                    if (!paramter.IsOut &&
-                        !pType.IsByRef)
+                    pTypeBulider = gen.DeclareLocal(pType);
+                    gen.Emit(OpCodes.Ldarg, paramter.Position + 1);
+                }
+                else
+                {
+                    dir = DbNetParamterDirection.InputAndOutPut;
+                    pTypeBulider = gen.DeclareLocal(eType);
+                    if (pType.IsByRef)
                     {
-                        pTypeBulider = gen.DeclareLocal(pType);
+                        //获取ref参数的值
                         gen.Emit(OpCodes.Ldarg, paramter.Position + 1);
-                    }
-                    else
-                    {
-                        dir = DbNetParamterDirection.InputAndOutPut;
-                        pTypeBulider = gen.DeclareLocal(GetNormalType(pType));
-                        if (pType.IsByRef)
-                        {
-                            //获取ref参数的值
-                            gen.Emit(OpCodes.Ldarg, paramter.Position + 1);
-                            GetRef(gen, pTypeBulider.LocalType);
-                        }
-                    }
-                    gen.Emit(OpCodes.Stloc, pTypeBulider);
-                    if (pTypeBulider.LocalType.IsClass)
-                    {
-                        Label isNullLabel = gen.DefineLabel();
-                        gen.Emit(OpCodes.Ldloc, pTypeBulider);
-                        gen.Emit(OpCodes.Ldnull);
-                        gen.Emit(OpCodes.Ceq);
-                        gen.Emit(OpCodes.Brfalse, isNullLabel);
-                        gen.Emit(OpCodes.Call, MethodHelper.defaultMethod.MakeGenericMethod(pTypeBulider.LocalType));
-                        gen.Emit(OpCodes.Stloc, pTypeBulider);
-                        gen.MarkLabel(isNullLabel);
-                    }
-                    if (paramter.IsOut||pType.IsByRef)
-                    {
-                        dir = DbNetParamterDirection.Output;
-                        //初始化赋值输出参数
-                        gen.Emit(OpCodes.Call, MethodHelper.defaultMethod.MakeGenericMethod(pTypeBulider.LocalType));
-                        gen.Emit(OpCodes.Stloc, pTypeBulider);
-                        gen.Emit(OpCodes.Ldarg, paramter.Position + 1);
-                        gen.Emit(OpCodes.Ldloc, pTypeBulider);
-                        SetRef(gen, pTypeBulider.LocalType);
+                        GetRef(gen, pTypeBulider.LocalType);
                     }
                 }
-                if (pTypeBulider.LocalType == typeof(string) || 
-                    pTypeBulider.LocalType.IsValueType||
+                gen.Emit(OpCodes.Stloc, pTypeBulider);
+                if (pTypeBulider.LocalType.IsClass)
+                {
+                    Label isNullLabel = gen.DefineLabel();
+                    gen.Emit(OpCodes.Ldloc, pTypeBulider);
+                    gen.Emit(OpCodes.Ldnull);
+                    gen.Emit(OpCodes.Ceq);
+                    gen.Emit(OpCodes.Brfalse, isNullLabel);
+                    gen.Emit(OpCodes.Call, MethodHelper.defaultMethod.MakeGenericMethod(pTypeBulider.LocalType));
+                    gen.Emit(OpCodes.Stloc, pTypeBulider);
+                    gen.MarkLabel(isNullLabel);
+                }
+                if (paramter.IsOut || pType.IsByRef)
+                {
+                    dir = DbNetParamterDirection.Output;
+                    //初始化赋值输出参数
+                    gen.Emit(OpCodes.Call, MethodHelper.defaultMethod.MakeGenericMethod(pTypeBulider.LocalType));
+                    gen.Emit(OpCodes.Stloc, pTypeBulider);
+                    gen.Emit(OpCodes.Ldarg, paramter.Position + 1);
+                    gen.Emit(OpCodes.Ldloc, pTypeBulider);
+                    SetRef(gen, pTypeBulider.LocalType);
+                }
+                if (pTypeBulider.LocalType == typeof(string) ||
+                    pTypeBulider.LocalType.IsValueType ||
                     pTypeBulider.LocalType.IsArray)
                 {
                     //添加结构体或者string到集合
@@ -339,22 +526,6 @@ namespace DbNet
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// 获取非引用类型
-        /// </summary>
-        /// <param name="pType"></param>
-        /// <returns></returns>
-        private static Type GetNormalType(Type pType)
-        {
-            Type mType = pType;
-            if (mType.FullName.EndsWith("&"))
-            {
-                mType = pType.Assembly.GetType(pType.FullName.TrimEnd('&'));
-            }
-
-            return mType;
         }
 
         /// <summary>

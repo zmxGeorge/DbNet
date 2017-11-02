@@ -65,21 +65,5 @@ namespace DbNet
             return dic.Values.GetEnumerator();
         }
 
-        public DbNetParamter UpdateValue<T>(string key, T value)
-        {
-            if (!dic.ContainsKey(key))
-            {
-                var p = new DbNetParamter { Direction = DbNetParamterDirection.InputAndOutPut, Name = key, Value = value };
-                dic.Add(key, p);
-                return p;
-            }
-            else
-            {
-                var p = dic[key];
-                p.Value = value;
-                return p;
-            }
-        }
-
     }
 }

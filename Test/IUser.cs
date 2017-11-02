@@ -12,10 +12,12 @@ namespace Test
         public M()
         {
             A = "5";
-            B = DateTime.Now;
+            B = DateTime.MinValue;
             C = 6;
         }
 
+
+        [DbParamter(Name ="a",CacheKey =CacheKeyType.None)]
         public string A { get; set; }
 
         public DateTime B { get; set; }
@@ -26,7 +28,7 @@ namespace Test
     public interface IUser:IDbFunction
     {
         [DbFunction(SqlText ="select * from user username=@name password=@password",
-            ExecuteType =ExecuteType.ExecuteObject,CommandType ="SqlText",UserCache =true)]
-        string LoginUser(string name,string password,[DbCacheKey]int id,DateTime dateTime,byte[] data,Guid guid, [DbCacheKey]ref M m);
+            ExecuteType =ExecuteType.ExecuteObject,CommandType ="SqlText",UserCache =true,IsolationLevel ="232")]
+        int LoginUser(string name,string password,[DbCacheKey]int id,DateTime dateTime,byte[] data,Guid guid, [DbCacheKey]ref M m,out SqlServerDbNetScope s1);
     }
 }

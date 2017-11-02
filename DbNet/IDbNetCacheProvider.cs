@@ -4,10 +4,6 @@ using System.Text;
 
 namespace DbNet
 {
-    public class DbNetCacheCollection
-    {
-
-    }
 
     /// <summary>
     /// 缓存提供程序
@@ -15,7 +11,17 @@ namespace DbNet
     public interface IDbNetCacheProvider
     {
         /// <summary>
-        /// 获取缓存
+        /// 生成缓存键
+        /// </summary>
+        /// <param name="functionName"></param>
+        /// <param name="methodName"></param>
+        /// <param name="sqlText"></param>
+        /// <param name="paramterCollection"></param>
+        /// <returns></returns>
+        string GetKey(string functionName,string methodName,string sqlText,DbNetParamterCollection paramterCollection);
+
+        /// <summary>
+        /// 获取缓存对象
         /// </summary>
         /// <param name="cacheKey"></param>
         /// <param name="hasCache"></param>
@@ -23,7 +29,7 @@ namespace DbNet
         SQLCacheItem GetCache(string cacheKey, out bool hasCache);
 
         /// <summary>
-        /// 添加缓存
+        /// 添加缓存对象
         /// </summary>
         /// <param name="cacheKey"></param>
         /// <param name="cacheItem"></param>

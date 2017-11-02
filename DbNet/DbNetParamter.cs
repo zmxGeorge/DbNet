@@ -9,6 +9,7 @@ namespace DbNet
     /// <summary>
     /// 查询参数
     /// </summary>
+    [Serializable]
     public class DbNetParamter
     {
         /// <summary>
