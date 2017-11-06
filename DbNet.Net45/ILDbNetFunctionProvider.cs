@@ -24,7 +24,7 @@ namespace DbNet
         public ILDbNetFunctionProvider()
         {
             AssemblyName name = new AssemblyName("DbInterface.dll");
-            ass_bulider = AppDomain.CurrentDomain.DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndSave);
+            ass_bulider = AppDomain.CurrentDomain.DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndCollect);
             module_bulider = ass_bulider.DefineDynamicModule("DbInterface.dll");
         }
 
@@ -286,7 +286,6 @@ namespace DbNet
             }
             var t = tb.CreateType();
             cache_imp.TryAdd(function_type, Activator.CreateInstance(t));
-            ass_bulider.Save("DbInterface.dll");
 
         }
 
