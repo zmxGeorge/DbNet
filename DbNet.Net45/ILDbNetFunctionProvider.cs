@@ -24,7 +24,7 @@ namespace DbNet
         public ILDbNetFunctionProvider()
         {
             AssemblyName name = new AssemblyName("DbInterface.dll");
-            ass_bulider = AppDomain.CurrentDomain.DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndCollect);
+            ass_bulider = AppDomain.CurrentDomain.DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndSave);
             module_bulider = ass_bulider.DefineDynamicModule("DbInterface.dll");
         }
 
@@ -88,6 +88,7 @@ namespace DbNet
                 {
                     throw new ArgumentException(string.Format("方法：{0} 未设置任何路由", m.Name));
                 }
+
                 #region IL代码开始
                 var paramterList = m.GetParameters();
                 var tm = tb.DefineMethod(m.Name, MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.RTSpecialName, CallingConventions.HasThis,
@@ -141,7 +142,8 @@ namespace DbNet
                 {
                     sqlTextKey = m_fun.SqlTextKey;
                 }
-                GetParamters(paramterList, gen, paramterBulider, user_cache, sqlTextKey,out scopeParemterInfo);
+                List<Tuple<string, int,MethodInfo,Type>> outputParamters = new List<Tuple<string, int, MethodInfo, Type>>();
+                GetParamters(outputParamters,paramterList, gen, paramterBulider, user_cache, sqlTextKey,out scopeParemterInfo);
 
                 //sql语句处理
                 string sqlText = m.Name;
@@ -248,7 +250,30 @@ namespace DbNet
                 gen.MarkLabel(end_label);
 
                 //若有out参数返回值在此处理
-
+                foreach (var item in outputParamters)
+                {
+                    string name = item.Item1;
+                    int index = item.Item2;
+                    MethodInfo pro_set = item.Item3;
+                    Type tType = item.Item4;
+                    if (pro_set==null)
+                    {
+                        gen.Emit(OpCodes.Ldarg, index);
+                        gen.Emit(OpCodes.Ldloc, paramterBulider);
+                        gen.Emit(OpCodes.Ldstr, name);
+                        gen.Emit(OpCodes.Call, MethodHelper.getValueMethod.MakeGenericMethod(tType));
+                        SetRef(gen, tType);
+                    }
+                    else
+                    {
+                        gen.Emit(OpCodes.Ldarg, index);
+                        gen.Emit(OpCodes.Ldloc, paramterBulider);
+                        gen.Emit(OpCodes.Ldstr, name);
+                        gen.Emit(OpCodes.Call, MethodHelper.getValueMethod.MakeGenericMethod(tType));
+                        gen.Emit(OpCodes.Call, pro_set);
+                    }
+                }
+                
                 #region 返回结果
                 if (m.ReturnType != null)
                 {
@@ -261,6 +286,7 @@ namespace DbNet
             }
             var t = tb.CreateType();
             cache_imp.TryAdd(function_type, Activator.CreateInstance(t));
+            ass_bulider.Save("DbInterface.dll");
 
         }
 
@@ -376,7 +402,8 @@ namespace DbNet
         /// <param name="paramterList"></param>
         /// <param name="gen"></param>
         /// <param name="paramterListBulider"></param>
-        private static void GetParamters(ParameterInfo[] paramterList, ILGenerator gen,LocalBuilder paramterListBulider,bool use_cache,string sqlTextKey,out ParameterInfo scope_parameterInfo)
+        private static void GetParamters(List<Tuple<string, int, MethodInfo,Type>> outputParamters,
+            ParameterInfo[] paramterList, ILGenerator gen,LocalBuilder paramterListBulider,bool use_cache,string sqlTextKey,out ParameterInfo scope_parameterInfo)
         {
             scope_parameterInfo = null;
             bool haschache_attr = paramterList.Any(x => x.GetCustomAttribute<DbCacheKeyAttribute>() != null);
@@ -443,13 +470,8 @@ namespace DbNet
                 }
                 if (paramter.IsOut || pType.IsByRef)
                 {
-                    dir = DbNetParamterDirection.Output;
-                    //初始化赋值输出参数
-                    gen.Emit(OpCodes.Call, MethodHelper.defaultMethod.MakeGenericMethod(pTypeBulider.LocalType));
-                    gen.Emit(OpCodes.Stloc, pTypeBulider);
-                    gen.Emit(OpCodes.Ldarg, paramter.Position + 1);
-                    gen.Emit(OpCodes.Ldloc, pTypeBulider);
-                    SetRef(gen, pTypeBulider.LocalType);
+                    //输出参数获取下阶段备用
+                    outputParamters.Add(new Tuple<string, int, MethodInfo, Type>(paramter.Name, paramter.Position + 1, null, eType));
                 }
                 if (pTypeBulider.LocalType == typeof(string) ||
                     pTypeBulider.LocalType.IsValueType ||
@@ -495,10 +517,14 @@ namespace DbNet
                         }
                         if (paramter.IsOut)
                         {
+                            //输出参数获取下阶段备用
+                            outputParamters.Add(new Tuple<string, int, MethodInfo,Type>(paramter.Name, paramter.Position + 1,p.GetSetMethod(),p.PropertyType));
                             pdir = DbNetParamterDirection.Output;
                         }
                         else if (pType.IsByRef)
                         {
+                            //输出参数获取下阶段备用
+                            outputParamters.Add(new Tuple<string, int, MethodInfo, Type>(paramter.Name, paramter.Position + 1, p.GetSetMethod(), p.PropertyType));
                             pdir = DbNetParamterDirection.InputAndOutPut;
                         }
                         if (attr_p != null)

@@ -55,6 +55,18 @@ namespace DbNet
             }
         }
 
+        public T GetValue<T>(string key)
+        {
+            if (!dic.ContainsKey(key))
+            {
+                return default(T);
+            }
+            else
+            {
+                return (T)dic[key].Value;
+            }
+        }
+
         public IEnumerator<DbNetParamter> GetEnumerator()
         {
             return dic.Values.GetEnumerator();

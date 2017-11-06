@@ -20,8 +20,6 @@ namespace DbNet
         {
             //封装数据库执行
             object result = null;
-            result = 1;
-            return (TResult)result;
             scope = GetScope(scope,command);
             scope.Open();
             var s = scope as SqlServerDbNetScope;

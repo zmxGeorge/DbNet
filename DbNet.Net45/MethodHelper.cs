@@ -15,6 +15,8 @@ namespace DbNet
 
         public static readonly MethodInfo paramterMethod = typeof(DbNetParamterCollection).GetMethod("Add", BindingFlags.Instance | BindingFlags.Public);
 
+        public static readonly MethodInfo getValueMethod = typeof(DbNetParamterCollection).GetMethod("GetValue", BindingFlags.Instance | BindingFlags.Public);
+
         public static readonly MethodInfo defaultMethod = typeof(MethodHelper).GetMethod("GetDefaultValue", BindingFlags.Static | BindingFlags.Public);
 
         public static readonly MethodInfo exceptionMethod = typeof(DbContext).GetMethod("RaiseEvent",BindingFlags.Static|BindingFlags.Public);
