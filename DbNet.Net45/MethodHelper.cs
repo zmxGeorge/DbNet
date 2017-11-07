@@ -42,6 +42,14 @@ namespace DbNet
 
         public static readonly MethodInfo cache_item_bulid = typeof(SQLCacheItem).GetMethod("SetItem", BindingFlags.Instance | BindingFlags.Public);
 
+        public static readonly MethodInfo get_result_method = typeof(DbNetResult).GetMethod("Get", BindingFlags.Instance | BindingFlags.Public);
+
+        public static readonly MethodInfo to_list_Method = typeof(MethodHelper).GetMethod("ToList", BindingFlags.Static | BindingFlags.Public);
+
+        public static readonly MethodInfo to_object_Method = typeof(MethodHelper).GetMethod("ToObject", BindingFlags.Static | BindingFlags.Public);
+
+        public static readonly MethodInfo to_array_Method = typeof(MethodHelper).GetMethod("ToArray", BindingFlags.Static | BindingFlags.Public);
+
 
         /// <summary>
         /// 默认值设置
@@ -58,6 +66,28 @@ namespace DbNet
             {
                 return Activator.CreateInstance<T>();
             }
+        }
+
+        public static List<T> ToList<T>(DataSet set) where T:class,new()
+        {
+            if (set.Tables.Count > 0)
+            {
+                return set.Tables[0].ToList<T>();
+            }
+            else
+            {
+                return new List<T>();
+            }
+        }
+
+        public static T ToObject<T>(DataSet set) where T : class, new()
+        {
+            return ToList<T>(set).FirstOrDefault();
+        }
+
+        public static T[] ToArray<T>(DataSet set) where T : class, new()
+        {
+            return ToList<T>(set).ToArray();
         }
     }
 }

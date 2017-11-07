@@ -12,6 +12,8 @@ namespace Test
         
         static void Main(string[] args)
         {
+            
+            var ms = typeof(List<int>);
             SqlServerSimpleDbRouteProvider.SetDefaultConnectionString("");
             DbNetConfiguration.AddDbProvider<SqlServerDbProvider>();
             DbNetConfiguration.MapRoute<SqlServerSimpleDbRouteProvider>("*");

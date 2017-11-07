@@ -16,7 +16,7 @@ namespace DbNet
         {
         }
 
-        public TResult ExecuteCommand<TResult>(DbNetCommand command, IDbNetScope scope, ExecuteType executetype)
+        public DbNetResult ExecuteCommand(DbNetCommand command, IDbNetScope scope, ExecuteType executetype)
         {
             //封装数据库执行
             object result = null;
@@ -64,7 +64,7 @@ namespace DbNet
                     break;
             }
             scope.Close();
-            return (TResult)result;
+            return new DbNetResult(result);
         }
 
         private IDbNetScope GetScope(IDbNetScope scope,DbNetCommand command)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -94,7 +95,7 @@ namespace DbNet
                 var tm = tb.DefineMethod(m.Name, MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.RTSpecialName, CallingConventions.HasThis,
                 m.ReturnType, paramterList.Select(x => x.ParameterType).ToArray());
                 if (paramterList.Count(x => (x.ParameterType.GetInterface(SCOPE_ITEM) != null ||
-                   (x.ParameterType.GetElementType()!=null&&x.ParameterType.GetElementType().GetInterface(SCOPE_ITEM) != null))) > 1)
+                   (x.ParameterType.GetElementType() != null && x.ParameterType.GetElementType().GetInterface(SCOPE_ITEM) != null))) > 1)
                 {
                     throw new Exception("参数中实现IDbNetScope接口类型的参数不能超过一个");
                 }
@@ -142,8 +143,8 @@ namespace DbNet
                 {
                     sqlTextKey = m_fun.SqlTextKey;
                 }
-                List<Tuple<string, int,MethodInfo,Type>> outputParamters = new List<Tuple<string, int, MethodInfo, Type>>();
-                GetParamters(outputParamters,paramterList, gen, paramterBulider, user_cache, sqlTextKey,out scopeParemterInfo);
+                List<Tuple<string, int, MethodInfo, Type>> outputParamters = new List<Tuple<string, int, MethodInfo, Type>>();
+                GetParamters(outputParamters, paramterList, gen, paramterBulider, user_cache, sqlTextKey, out scopeParemterInfo);
 
                 //sql语句处理
                 string sqlText = m.Name;
@@ -157,7 +158,7 @@ namespace DbNet
                     var paramter = paramterList.FirstOrDefault(x => x.Name == sqlTextKey);
                     if (paramter == null)
                     {
-                        throw new Exception("未能找到指定sql语句的参数，名称:"+ sqlTextKey);
+                        throw new Exception("未能找到指定sql语句的参数，名称:" + sqlTextKey);
                     }
                     if (paramter.ParameterType != typeof(string))
                     {
@@ -168,7 +169,7 @@ namespace DbNet
                 gen.Emit(OpCodes.Stloc, sqlText_bulider);
 
                 MapRouteAndProvider(configuration, route_name, function_type, m, m_route_type, gen, sqlConnection_bulider, dbNetProvider, paramterBulider);
-                SetCache(m.ReturnType,function_type.Name,m.Name,sqlText_bulider,gen, user_cache, result_builder, cacheKey_bulider,
+                SetCache(m.ReturnType, function_type.Name, m.Name, sqlText_bulider, gen, user_cache, result_builder, cacheKey_bulider,
                     cacheItem_bulider, cacheProvider, paramterBulider, hasCacheBulider, end_label);
                 string commandType = string.Empty;
                 if (m_fun != null)
@@ -202,12 +203,43 @@ namespace DbNet
                     gen.Emit(OpCodes.Stloc, netScope_bulider);
                 }
                 //执行命令
+                LocalBuilder dbNetResultBulider = gen.DeclareLocal(typeof(DbNetResult));
                 gen.Emit(OpCodes.Ldloc, dbNetProvider);
                 gen.Emit(OpCodes.Ldloc, commandBulider);
                 gen.Emit(OpCodes.Ldloc, netScope_bulider);
                 gen.Emit(OpCodes.Ldc_I4, (int)executeType);
-                gen.Emit(OpCodes.Call, MethodHelper.db_exec_Method.MakeGenericMethod(new Type[] { m.ReturnType}));
+                gen.Emit(OpCodes.Call, MethodHelper.db_exec_Method.MakeGenericMethod(new Type[] { m.ReturnType }));
+                gen.Emit(OpCodes.Stloc, dbNetResultBulider);
+                gen.Emit(OpCodes.Ldloc, dbNetResultBulider);
+                Type rType = m.ReturnType;
+                if (rType.IsValueType || rType == typeof(string)
+                    || (rType.IsArray && rType.GetElementType() != null && rType.GetElementType().IsValueType))
+                {
+                    gen.Emit(OpCodes.Call, MethodHelper.get_result_method.MakeGenericMethod(rType));
+                }
+                else
+                {
+                    gen.Emit(OpCodes.Call, MethodHelper.get_result_method.MakeGenericMethod(typeof(DataSet)));
+                    if (rType != typeof(DataSet) &&
+                        rType != typeof(DataTable))
+                    {
+                        //需要做List转换的类型
+                        if (rType.GetInterface(typeof(System.Collections.IList).FullName) != null)
+                        {
+                            gen.Emit(OpCodes.Call, MethodHelper.to_list_Method.MakeGenericMethod(rType.GetGenericArguments()));
+                        }
+                        else if (rType.IsArray)
+                        {
+                            gen.Emit(OpCodes.Call, MethodHelper.to_array_Method.MakeGenericMethod(rType.GetElementType()));
+                        }
+                        else if (rType.IsClass)
+                        {
+                            gen.Emit(OpCodes.Call, MethodHelper.to_object_Method.MakeGenericMethod(rType));
+                        }
+                    }
+                }
                 gen.Emit(OpCodes.Stloc, result_builder);
+
                 //若存在scope输出参数则赋值
                 if (scopeParemterInfo != null &&
                     (scopeParemterInfo.IsOut ||
@@ -560,16 +592,18 @@ namespace DbNet
         /// <param name="executeType"></param>
         private void GetExecuteType(MethodInfo m, ref ExecuteType executeType)
         {
-            if (executeType != ExecuteType.Default)
+            var rType = m.ReturnType;
+            if (executeType == ExecuteType.Default)
             {
                 //执行命令类型的默认设置
-                if (m.ReturnType != null)
+                if (rType != null)
                 {
-                    if (m.ReturnType == typeof(int))
+                    if (rType == typeof(int))
                     {
                         executeType = ExecuteType.ExecuteNoQuery;
                     }
-                    else if (m.ReturnType.IsValueType || m.ReturnType == typeof(string))
+                    else if (rType.IsValueType || rType == typeof(string)
+                        ||(rType.IsArray&& rType.GetElementType()!=null&&rType.GetElementType().IsValueType))
                     {
                         executeType = ExecuteType.ExecuteObject;
                     }

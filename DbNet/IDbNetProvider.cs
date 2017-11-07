@@ -6,6 +6,7 @@ using System.Data.Common;
 
 namespace DbNet
 {
+
     /// <summary>
     /// 数据库执行类型
     /// </summary>
@@ -42,7 +43,7 @@ namespace DbNet
         /// <param name="scope">执行范围</param>
         /// <param name="executeType">执行类型</param>
         /// <returns></returns>
-        TResult ExecuteCommand<TResult>(DbNetCommand command, IDbNetScope scope, ExecuteType executeType);
+        DbNetResult ExecuteCommand(DbNetCommand command, IDbNetScope scope, ExecuteType executeType);
 
 
     }
