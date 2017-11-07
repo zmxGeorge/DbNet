@@ -40,6 +40,8 @@ namespace DbNet
 
         public static readonly ConstructorInfo level_bulid = typeof(DbNetIsolationLevel).GetConstructor(new Type[] { typeof(string)});
 
+        public static readonly MethodInfo dispos_Method = typeof(IDisposable).GetMethod("Dispose", BindingFlags.Instance | BindingFlags.Public);
+
         public static readonly MethodInfo get_result_method = typeof(DbNetResult).GetMethod("Get", BindingFlags.Instance | BindingFlags.Public);
 
         public static readonly MethodInfo to_list_Method = typeof(MethodHelper).GetMethod("ToList", BindingFlags.Static | BindingFlags.Public);

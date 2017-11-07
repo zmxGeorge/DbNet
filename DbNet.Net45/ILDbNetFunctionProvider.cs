@@ -238,6 +238,13 @@ namespace DbNet
                     }
                 }
                 gen.Emit(OpCodes.Stloc, result_builder);
+                if (scopeParemterInfo == null)
+                {
+                    //如果不存在DbNetScope参数的话，DbNetScope范围会视作只在该方法内部执行
+                    //故会调用Dispose
+                    gen.Emit(OpCodes.Ldloc, netScope_bulider);
+                    gen.Emit(OpCodes.Call, MethodHelper.dispos_Method);
+                }
 
                 //若存在scope输出参数则赋值
                 if (scopeParemterInfo != null &&
