@@ -223,13 +223,13 @@ namespace DbNet
                         rType != typeof(DataTable))
                     {
                         //需要做List转换的类型
-                        if (rType.GetInterface(typeof(System.Collections.IList).FullName) != null)
-                        {
-                            gen.Emit(OpCodes.Call, MethodHelper.to_list_Method.MakeGenericMethod(rType.GetGenericArguments()));
-                        }
-                        else if (rType.IsArray)
+                        if (rType.IsArray)
                         {
                             gen.Emit(OpCodes.Call, MethodHelper.to_array_Method.MakeGenericMethod(rType.GetElementType()));
+                        }
+                        else if (rType.GetInterface(typeof(System.Collections.IList).FullName) != null)
+                        {
+                            gen.Emit(OpCodes.Call, MethodHelper.to_list_Method.MakeGenericMethod(rType.GetGenericArguments()));
                         }
                         else if (rType.IsClass)
                         {
