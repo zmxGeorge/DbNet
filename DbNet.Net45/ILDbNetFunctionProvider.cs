@@ -167,7 +167,6 @@ namespace DbNet
                     gen.Emit(OpCodes.Ldarg, paramter.Position + 1);
                 }
                 gen.Emit(OpCodes.Stloc, sqlText_bulider);
-
                 MapRouteAndProvider(configuration, route_name, function_type, m, m_route_type, gen, sqlConnection_bulider, dbNetProvider, paramterBulider);
                 SetCache(m.ReturnType, function_type.Name, m.Name, sqlText_bulider, gen, user_cache, result_builder, cacheKey_bulider,
                     cacheItem_bulider, cacheProvider, paramterBulider, hasCacheBulider, end_label);
@@ -208,7 +207,7 @@ namespace DbNet
                 gen.Emit(OpCodes.Ldloc, commandBulider);
                 gen.Emit(OpCodes.Ldloc, netScope_bulider);
                 gen.Emit(OpCodes.Ldc_I4, (int)executeType);
-                gen.Emit(OpCodes.Call, MethodHelper.db_exec_Method.MakeGenericMethod(new Type[] { m.ReturnType }));
+                gen.Emit(OpCodes.Call, MethodHelper.db_exec_Method);
                 gen.Emit(OpCodes.Stloc, dbNetResultBulider);
                 gen.Emit(OpCodes.Ldloc, dbNetResultBulider);
                 Type rType = m.ReturnType;
@@ -358,24 +357,25 @@ namespace DbNet
                 gen.Emit(OpCodes.Ldloc, hasCacheBulider);
                 gen.Emit(OpCodes.Brfalse, cacheLabel);
                 #endregion
+
+                //根据缓存取值
+                Label cacheItemNullLabel = gen.DefineLabel();
+                //判断返回的SqlCacheItem是否为空，若为空无需取值，直接返回
+                gen.Emit(OpCodes.Ldloc, cacheItem_bulider);
+                gen.Emit(OpCodes.Ldnull);
+                gen.Emit(OpCodes.Ceq);
+                gen.Emit(OpCodes.Brtrue, cacheItemNullLabel);
+                //取得SqlItem内的参数以及结果
+                gen.Emit(OpCodes.Ldloc, cacheItem_bulider);
+                gen.Emit(OpCodes.Call, MethodHelper.cacheItem_getParamters);
+                gen.Emit(OpCodes.Stloc, paramterBulider);
+                gen.Emit(OpCodes.Ldloc, cacheItem_bulider);
+                gen.Emit(OpCodes.Call, MethodHelper.cacheItem_getResult.MakeGenericMethod(returnType));
+                gen.Emit(OpCodes.Stloc, result_builder);
+                gen.MarkLabel(cacheItemNullLabel);
+                gen.Emit(OpCodes.Br, end_label);
+                gen.MarkLabel(cacheLabel);
             }
-            //根据缓存取值
-            Label cacheItemNullLabel = gen.DefineLabel();
-            //判断返回的SqlItem是否为空，若为空无需取值，直接返回
-            gen.Emit(OpCodes.Ldloc, cacheItem_bulider);
-            gen.Emit(OpCodes.Ldnull);
-            gen.Emit(OpCodes.Ceq);
-            gen.Emit(OpCodes.Brtrue, cacheItemNullLabel);
-            //取得SqlItem内的参数以及结果
-            gen.Emit(OpCodes.Ldloc, cacheItem_bulider);
-            gen.Emit(OpCodes.Call, MethodHelper.cacheItem_getParamters);
-            gen.Emit(OpCodes.Stloc, paramterBulider);
-            gen.Emit(OpCodes.Ldloc, cacheItem_bulider);
-            gen.Emit(OpCodes.Call, MethodHelper.cacheItem_getResult.MakeGenericMethod(returnType));
-            gen.Emit(OpCodes.Stloc, result_builder);
-            gen.MarkLabel(cacheItemNullLabel);
-            gen.Emit(OpCodes.Br, end_label);
-            gen.MarkLabel(cacheLabel);
         }
 
         /// <summary>
