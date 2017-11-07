@@ -51,6 +51,7 @@ namespace DbNet
             {
                 if (!is_commit)
                 {
+                    //若事务未提交，则会自动提交事务
                     try
                     {
                         Transaction.Commit();
