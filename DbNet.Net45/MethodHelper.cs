@@ -27,9 +27,9 @@ namespace DbNet
 
         public static readonly MethodInfo cache_addCacheMethod = typeof(IDbNetCacheProvider).GetMethod("AddCache", BindingFlags.Instance | BindingFlags.Public);
 
-        public static readonly MethodInfo cacheItem_getParamters = typeof(SQLCacheItem).GetMethod("GetParamters", BindingFlags.Instance | BindingFlags.Public);
+        public static readonly MethodInfo cacheItem_getParamters = typeof(ISQLCacheItem).GetMethod("GetParamters", BindingFlags.Instance | BindingFlags.Public);
 
-        public static readonly MethodInfo cacheItem_getResult = typeof(SQLCacheItem).GetMethod("GetReult", BindingFlags.Instance | BindingFlags.Public);
+        public static readonly MethodInfo cacheItem_getResult = typeof(ISQLCacheItem).GetMethod("GetResult", BindingFlags.Instance | BindingFlags.Public);
 
         public static readonly MethodInfo db_exec_Method = typeof(IDbNetProvider).GetMethod("ExecuteCommand", BindingFlags.Instance | BindingFlags.Public);
 
@@ -39,8 +39,6 @@ namespace DbNet
         public static readonly FieldInfo none_level = typeof(DbNetIsolationLevel).GetField("None", BindingFlags.Public | BindingFlags.Static);
 
         public static readonly ConstructorInfo level_bulid = typeof(DbNetIsolationLevel).GetConstructor(new Type[] { typeof(string)});
-
-        public static readonly MethodInfo cache_item_bulid = typeof(SQLCacheItem).GetMethod("SetItem", BindingFlags.Instance | BindingFlags.Public);
 
         public static readonly MethodInfo get_result_method = typeof(DbNetResult).GetMethod("Get", BindingFlags.Instance | BindingFlags.Public);
 

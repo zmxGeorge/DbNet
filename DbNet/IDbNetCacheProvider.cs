@@ -26,7 +26,7 @@ namespace DbNet
         /// <param name="cacheKey"></param>
         /// <param name="hasCache"></param>
         /// <returns></returns>
-        SQLCacheItem GetCache(string cacheKey, out bool hasCache);
+        ISQLCacheItem GetCache(string cacheKey, out bool hasCache);
 
         /// <summary>
         /// 添加缓存对象
@@ -35,6 +35,6 @@ namespace DbNet
         /// <param name="cacheItem"></param>
         /// <param name="cacheTime"></param>
         /// <param name="duringTime"></param>
-        void AddCache(string cacheKey, SQLCacheItem cacheItem, int cacheTime, int duringTime);
+        void AddCache(string cacheKey, ISQLCacheItem cacheItem, int cacheTime, int duringTime);
     }
 }

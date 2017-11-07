@@ -24,7 +24,7 @@ namespace DbNet
 
         private static readonly System.Runtime.Caching.MemoryCache _memoryCache = new System.Runtime.Caching.MemoryCache("db_cache");
 
-        private static readonly ConcurrentDictionary<string, SQLCacheItem> m_cache = new ConcurrentDictionary<string, SQLCacheItem>();
+        private static readonly ConcurrentDictionary<string, ISQLCacheItem> m_cache = new ConcurrentDictionary<string, ISQLCacheItem>();
 
         /// <summary>
         /// 生成缓存键
@@ -43,35 +43,28 @@ namespace DbNet
                     paramterValues.Add(item.Name, item.Value);
                 }
             }
-            if (paramterValues.Count == 0)
+            //二进制序列化成字节数组
+            BinaryFormatter binaryFormatter = new BinaryFormatter();
+            byte[] data = null;
+            using (MemoryStream mstream = new MemoryStream())
             {
-                return null;
+                binaryFormatter.Serialize(mstream, paramterValues);
+                data = mstream.ToArray();
             }
-            else
+            //哈希处理
+            SHA256 sha = new SHA256CryptoServiceProvider();
+            data = sha.ComputeHash(data);
+            data = Encoding.UTF8.GetBytes(string.Format(functionName, methodName, sqlText)).Concat(data).ToArray();
+            data = sha.ComputeHash(data);
+            StringBuilder sb = new StringBuilder();
+            foreach (var b in data)
             {
-                //二进制序列化成字节数组
-                BinaryFormatter binaryFormatter = new BinaryFormatter();
-                byte[] data = null;
-                using (MemoryStream mstream = new MemoryStream())
-                {
-                    binaryFormatter.Serialize(mstream, paramterValues);
-                    data = mstream.ToArray();
-                }
-                //哈希处理
-                SHA256 sha = new SHA256CryptoServiceProvider();
-                data=sha.ComputeHash(data);
-                data = Encoding.UTF8.GetBytes(string.Format(functionName, methodName, sqlText)).Concat(data).ToArray();
-                data = sha.ComputeHash(data);
-                StringBuilder sb = new StringBuilder();
-                foreach (var b in data)
-                {
-                    sb.Append(b.ToString(X_TWO));
-                }
-                return sb.ToString();
+                sb.Append(b.ToString(X_TWO));
             }
+            return sb.ToString();
         }
 
-        public void AddCache(string cacheKey, SQLCacheItem cacheItem, int cacheTime, int duringTime)
+        public void AddCache(string cacheKey, ISQLCacheItem cacheItem, int cacheTime, int duringTime)
         {
             if (cacheTime == -1)
             {
@@ -81,16 +74,16 @@ namespace DbNet
             {
                 if (cacheTime > 0)
                 {
-                    _memoryCache.Add(new CacheItem(cacheKey) { Key = cacheKey, Value = cacheKey }, new CacheItemPolicy { AbsoluteExpiration = new DateTimeOffset(DateTime.Now, new TimeSpan(0, 0, cacheTime)) });
+                    _memoryCache.Add(new CacheItem(cacheKey) { Key = cacheKey, Value = cacheItem }, new CacheItemPolicy { AbsoluteExpiration = new DateTimeOffset(DateTime.Now, new TimeSpan(0, 0, cacheTime)) });
                 }
                 else if (duringTime > 0)
                 {
-                    _memoryCache.Add(new CacheItem(cacheKey) { Key = cacheKey, Value = cacheKey }, new CacheItemPolicy { SlidingExpiration = new TimeSpan(0, 0, duringTime) });
+                    _memoryCache.Add(new CacheItem(cacheKey) { Key = cacheKey, Value = cacheItem }, new CacheItemPolicy { SlidingExpiration = new TimeSpan(0, 0, duringTime) });
                 }
             }
         }
 
-        public SQLCacheItem GetCache(string cacheKey, out bool hasCache)
+        public ISQLCacheItem GetCache(string cacheKey, out bool hasCache)
         {
             if (m_cache.ContainsKey(cacheKey))
             {
@@ -102,7 +95,7 @@ namespace DbNet
                 if (_memoryCache.Contains(cacheKey))
                 {
                     hasCache = true;
-                    return _memoryCache.Get(cacheKey) as SQLCacheItem;
+                    return _memoryCache.Get(cacheKey) as ISQLCacheItem;
                 }
                 else
                 {

@@ -4,25 +4,28 @@ using System.Text;
 
 namespace DbNet
 {
+    public interface ISQLCacheItem
+    {
+        DbNetParamterCollection GetParamters();
+
+        T GetResult<T>();
+    }
+
     /// <summary>
     /// 缓存项目
     /// </summary>
-    public class SQLCacheItem
+    public class SQLCacheItem<T>:ISQLCacheItem
     {
-        private DbNetCommand _dbNetCommand;
+        private readonly DbNetCommand _dbNetCommand;
 
-        private object _result;
+        private readonly object _result;
 
-        public SQLCacheItem()
-        {
-            
-        }
-
-        public void SetItem<TResult>(DbNetCommand command, TResult result)
+        public SQLCacheItem(DbNetCommand command, T result)
         {
             _dbNetCommand = command;
             _result = result;
         }
+
 
         /// <summary>
         /// 获取缓存的参数
@@ -34,14 +37,9 @@ namespace DbNet
         }
 
 
-        /// <summary>
-        /// 获取结果集
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T GetReult<T>()
+        public TResult GetResult<TResult>()
         {
-            return (T)_result;
+            return (TResult)_result;
         }
     }
 }

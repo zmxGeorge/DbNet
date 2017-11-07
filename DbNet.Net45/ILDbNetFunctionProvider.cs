@@ -109,7 +109,7 @@ namespace DbNet
                 LocalBuilder sqlText_bulider = gen.DeclareLocal(typeof(string));//定义Sql语句变量
                 LocalBuilder sqlConnection_bulider = gen.DeclareLocal(typeof(string));//定义数据库连接变量
                 LocalBuilder cacheKey_bulider = gen.DeclareLocal(typeof(string));//定义缓存键变量
-                LocalBuilder cacheItem_bulider = gen.DeclareLocal(typeof(SQLCacheItem));//定义缓存对象变量
+                LocalBuilder cacheItem_bulider = gen.DeclareLocal(typeof(ISQLCacheItem));//定义缓存对象变量
                 LocalBuilder netScope_bulider = gen.DeclareLocal(typeof(IDbNetScope));//定义NetScope
                 LocalBuilder hasCache_bulider = gen.DeclareLocal(typeof(bool));//定义是否存在缓存变量
                 LocalBuilder dbNetProvider = gen.DeclareLocal(typeof(IDbNetProvider));//定义数据库提供程序变量
@@ -260,10 +260,8 @@ namespace DbNet
                     }
                     gen.Emit(OpCodes.Ldloc, commandBulider);
                     gen.Emit(OpCodes.Ldloc, result_builder);
-                    gen.Emit(OpCodes.Newobj, typeof(SQLCacheItem).GetConstructor(Type.EmptyTypes));
+                    gen.Emit(OpCodes.Newobj, typeof(SQLCacheItem<>).MakeGenericType(m.ReturnType).GetConstructor(new Type[] { typeof(DbNetCommand),m.ReturnType}));
                     gen.Emit(OpCodes.Stloc, cacheItem_bulider);
-                    gen.Emit(OpCodes.Ldloc, cacheItem_bulider);
-                    gen.Emit(OpCodes.Call, MethodHelper.cache_item_bulid.MakeGenericMethod(new Type[] { m.ReturnType }));
                     gen.Emit(OpCodes.Ldloc, cacheProvider);
                     gen.Emit(OpCodes.Ldloc, cacheKey_bulider);
                     gen.Emit(OpCodes.Ldloc, cacheItem_bulider);
