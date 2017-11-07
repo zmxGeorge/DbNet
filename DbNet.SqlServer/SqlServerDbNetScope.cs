@@ -15,6 +15,8 @@ namespace DbNet
 
         private DbNetIsolationLevel _isolationLevel = null;
 
+        private bool is_commit = false;
+
         public SqlConnection Connection { get; set; }
 
         public SqlTransaction Transaction { get; set; }
@@ -38,6 +40,7 @@ namespace DbNet
         {
             if (Transaction != null)
             {
+                is_commit = true;
                 Transaction.Commit();
             }
         }
@@ -46,7 +49,24 @@ namespace DbNet
         {
             if (Transaction != null)
             {
-                Transaction.Commit();
+                if (!is_commit)
+                {
+                    try
+                    {
+                        Transaction.Commit();
+                    }
+                    catch (Exception)
+                    {
+                        try
+                        {
+                            Transaction.Rollback();
+                        }
+                        catch (Exception ex)
+                        {
+                            throw ex;
+                        }
+                    }
+                }
                 Transaction.Dispose();
             }
             if (Connection != null)
@@ -122,6 +142,7 @@ namespace DbNet
         {
             if (Transaction != null)
             {
+                is_commit = true;
                 Transaction.Rollback();
             }
         }
