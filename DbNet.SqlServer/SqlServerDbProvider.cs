@@ -64,6 +64,14 @@ namespace DbNet
                     break;
             }
             scope.Close();
+            foreach (var p in command.Paramters)
+            {
+                string pName = string.Format(PARAMTERFORAMT, p.Name);
+                if (com.Parameters[pName] != null)
+                {
+                    p.Value = com.Parameters[pName].Value;
+                }
+            }
             return new DbNetResult(result);
         }
 
