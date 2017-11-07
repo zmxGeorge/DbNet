@@ -34,6 +34,6 @@ namespace Test
         [DbFunction(SqlText ="select top 10 * from _user where uid=@id",
             ExecuteType =ExecuteType.ExecuteDateTable,CommandType ="SqlText",UserCache =true,DuringTime =300,
             UseTransaction =true,IsolationLevel = "ReadCommitted")]
-        User GetUserById([DbCacheKey]int id,string name,out SqlServerDbNetScope netScope);
+        User GetUserById([DbCacheKey]int id,string name, out SqlServerDbNetScope netScope);
     }
 }

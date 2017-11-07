@@ -46,6 +46,7 @@ namespace DbNet
         {
             if (Transaction != null)
             {
+                Transaction.Commit();
                 Transaction.Dispose();
             }
             if (Connection != null)
