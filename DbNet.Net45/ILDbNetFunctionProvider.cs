@@ -205,7 +205,7 @@ namespace DbNet
                 LocalBuilder dbNetResultBulider = gen.DeclareLocal(typeof(DbNetResult));
                 gen.Emit(OpCodes.Ldloc, dbNetProvider);
                 gen.Emit(OpCodes.Ldloc, commandBulider);
-                gen.Emit(OpCodes.Ldloc, netScope_bulider);
+                gen.Emit(OpCodes.Ldloca, netScope_bulider);
                 gen.Emit(OpCodes.Ldc_I4, (int)executeType);
                 gen.Emit(OpCodes.Call, MethodHelper.db_exec_Method);
                 gen.Emit(OpCodes.Stloc, dbNetResultBulider);

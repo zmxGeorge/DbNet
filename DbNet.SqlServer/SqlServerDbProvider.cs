@@ -16,7 +16,7 @@ namespace DbNet
         {
         }
 
-        public DbNetResult ExecuteCommand(DbNetCommand command, IDbNetScope scope, ExecuteType executetype)
+        public DbNetResult ExecuteCommand(DbNetCommand command,ref IDbNetScope scope, ExecuteType executetype)
         {
             //封装数据库执行
             object result = null;

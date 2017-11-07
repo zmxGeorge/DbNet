@@ -43,7 +43,7 @@ namespace DbNet
         /// <param name="scope">执行范围</param>
         /// <param name="executeType">执行类型</param>
         /// <returns></returns>
-        DbNetResult ExecuteCommand(DbNetCommand command, IDbNetScope scope, ExecuteType executeType);
+        DbNetResult ExecuteCommand(DbNetCommand command,ref IDbNetScope scope, ExecuteType executeType);
 
 
     }
