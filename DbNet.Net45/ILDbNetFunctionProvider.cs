@@ -66,7 +66,9 @@ namespace DbNet
                 dbroute_type = configuration.RouteCollection[routeAttribute.Name];
                 route_name = routeAttribute.Name;
             }
+            var baseM = function_type.GetInterfaces().SelectMany(x => x.GetMethods(BindingFlags.Public | BindingFlags.Instance)).ToList();
             var methods = function_type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+            methods = baseM.Concat(methods).ToArray();
             //创建实现类型
             TypeBuilder tb = module_bulider.DefineType(string.Format(KEY_FORMAT, function_type.Name, function_type.Namespace + "."), TypeAttributes.Class | TypeAttributes.Public, typeof(DbContext));
             tb.AddInterfaceImplementation(function_type);

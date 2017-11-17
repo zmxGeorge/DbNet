@@ -12,7 +12,7 @@ namespace Test
         
         static void Main(string[] args)
         {
-            SqlServerSimpleDbRouteProvider.SetDefaultConnectionString("");//设置数据库连接
+            SqlServerSimpleDbRouteProvider.SetDefaultConnectionString("Data Source=123.207.183.51;Initial Catalog=yiqi_formal;Persist Security Info=True;User ID=dbtest;Password=q1w2e3r4");//设置数据库连接
             DbNetConfiguration.AddDbProvider<SqlServerDbProvider>();//设置SqlServer数据库提供程序
             DbNetConfiguration.MapRoute<SqlServerSimpleDbRouteProvider>("*");//设置数据库默认路由，注:默认路由名称为*
             DbNetConfiguration.AddCacheProvider<MemoryCacheProvider>();//设置缓存提供程序
