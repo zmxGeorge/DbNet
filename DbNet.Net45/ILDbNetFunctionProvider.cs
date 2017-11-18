@@ -107,6 +107,10 @@ namespace DbNet
                 GetExecuteType(m, ref executeType);
                 bool user_cache = m_fun.UserCache;
                 bool user_tran = m_fun.UseTransaction;
+                if (user_cache && user_tran)
+                {
+                    throw new ArgumentException(string.Format("缓存和事务不能被同时使用,接口:{0} 方法:{1}", function_type.Name, m.Name));
+                }
                 LocalBuilder result_builder = gen.DeclareLocal(m.ReturnType);//定义返回变量
                 LocalBuilder sqlText_bulider = gen.DeclareLocal(typeof(string));//定义Sql语句变量
                 LocalBuilder sqlConnection_bulider = gen.DeclareLocal(typeof(string));//定义数据库连接变量
