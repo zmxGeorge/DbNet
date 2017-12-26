@@ -67,7 +67,7 @@ namespace DbNet
                 route_name = routeAttribute.Name;
             }
             var baseM = function_type.GetInterfaces().SelectMany(x => x.GetMethods(BindingFlags.Public | BindingFlags.Instance)).ToList();
-            var methods = function_type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+            var methods = function_type.GetMethods(BindingFlags.Public |BindingFlags.Instance);
             methods = baseM.Concat(methods).ToArray();
             //创建实现类型
             TypeBuilder tb = module_bulider.DefineType(string.Format(KEY_FORMAT, function_type.Name, function_type.Namespace + "."), TypeAttributes.Class | TypeAttributes.Public, typeof(DbContext));
@@ -103,10 +103,20 @@ namespace DbNet
                 }
                 //定义方法实现内容
                 ILGenerator gen = tm.GetILGenerator();
-                ExecuteType executeType = m_fun.ExecuteType;
-                GetExecuteType(m, ref executeType);
-                bool user_cache = m_fun.UserCache;
-                bool user_tran = m_fun.UseTransaction;
+                ExecuteType executeType= ExecuteType.Default;
+                bool user_cache = false;
+                bool user_tran = false;
+                if (m_fun != null)
+                {
+                    executeType = m_fun.ExecuteType;
+                    GetExecuteType(m, ref executeType);
+                    user_cache = m_fun.UserCache;
+                    user_tran = m_fun.UseTransaction;
+                }
+                if (user_cache && user_tran)
+                {
+                    throw new ArgumentException(string.Format("缓存和事务不能被同时使用,接口:{0} 方法:{1}", function_type.Name, m.Name));
+                }
                 LocalBuilder result_builder = gen.DeclareLocal(m.ReturnType);//定义返回变量
                 LocalBuilder sqlText_bulider = gen.DeclareLocal(typeof(string));//定义Sql语句变量
                 LocalBuilder sqlConnection_bulider = gen.DeclareLocal(typeof(string));//定义数据库连接变量

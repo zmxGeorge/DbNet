@@ -151,6 +151,11 @@ namespace DbNet
 
         private static T GetItem<T>(string columnName, DataRow row)
         {
+            var uType=Nullable.GetUnderlyingType(typeof(T));
+            if (uType == null)
+            {
+                uType = typeof(T);
+            }
             if (!row.Table.Columns.Contains(columnName))
             {
                 return default(T);
@@ -172,7 +177,7 @@ namespace DbNet
             if (obj is string)
             {
                 string str = obj.ToString();
-                if (typeof(T) == typeof(Guid))
+                if (uType == typeof(Guid))
                 {
                     Guid r = Guid.Empty;
                     if (Guid.TryParse(str, out r))
@@ -184,7 +189,7 @@ namespace DbNet
                         r_obj = Guid.Empty;
                     }
                 }
-                else if (typeof(T) == typeof(DateTime))
+                else if (uType == typeof(DateTime))
                 {
                     DateTime r = DateTime.MinValue;
                     if (DateTime.TryParse(str, out r))
@@ -196,7 +201,7 @@ namespace DbNet
                         r_obj = DateTime.MinValue;
                     }
                 }
-                else if (typeof(T) == typeof(TimeSpan))
+                else if (uType == typeof(TimeSpan))
                 {
                     TimeSpan r = TimeSpan.MinValue;
                     if (TimeSpan.TryParse(str, out r))
@@ -220,18 +225,14 @@ namespace DbNet
                     }
                 }
             }
-            else if (typeof(T).IsEnum)
+            else if (uType == typeof(bool) && obj.GetType()==typeof(int))
             {
-                string str = obj.ToString();
-                T r = default(T);
-                if (EnumTryParse<T>(str, out r))
-                {
-                    r_obj = r;
-                }
-                else
-                {
-                    r_obj = default(T);
-                }
+                int m = (int)obj;
+                r_obj= m > 0 ? true : false;
+            }
+            else if (uType.IsEnum)
+            {
+                r_obj = EnumTryParse(uType, obj, default(T));
             }
             else
             {
@@ -240,17 +241,16 @@ namespace DbNet
             return (T)r_obj;
         }
 
-        private static bool EnumTryParse<T>(string value, out T result)
+        private static object EnumTryParse(Type uType, object obj,object defaultValue)
         {
             try
             {
-                result = (T)Enum.Parse(typeof(T), value, true);
-                return true;
+                string str = obj.ToString();
+                return Enum.Parse(uType, str);
             }
             catch (Exception)
             {
-                result = default(T);
-                return false;
+                return defaultValue;
             }
         }
     }

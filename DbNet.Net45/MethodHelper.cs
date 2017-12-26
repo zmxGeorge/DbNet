@@ -62,6 +62,10 @@ namespace DbNet
             {
                 return default(T);
             }
+            else if (typeof(T) == typeof(string)||typeof(T).IsValueType)
+            {
+                return default(T);
+            }
             else
             {
                 return Activator.CreateInstance<T>();

@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="Attribute\DbCacheKeyAttribute.cs" />
     <Compile Include="DbNetResult.cs" />
+    <Compile Include="DbNetSqlParser.cs" />
     <Compile Include="IDbNetCacheProvider.cs" />
     <Compile Include="Attribute\DbFunctionAttribute.cs" />
     <Compile Include="Attribute\DbParamterAttribute.cs" />

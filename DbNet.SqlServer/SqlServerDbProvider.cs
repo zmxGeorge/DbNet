@@ -5,13 +5,12 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace DbNet
 {
     public class SqlServerDbProvider : IDbNetProvider
     {
-        private const string PARAMTERFORAMT = "@{0}";
-
         public SqlServerDbProvider()
         {
         }
@@ -32,6 +31,10 @@ namespace DbNet
             foreach (var p in command.Paramters)
             {
                 var sql_p = new SqlParameter(string.Format(PARAMTERFORAMT, p.Name), p.Value);
+                if (p.Value == null)
+                {
+                    sql_p.Value = DBNull.Value;
+                }
                 switch (p.Direction)
                 {
                     case DbNetParamterDirection.Input:
@@ -69,7 +72,15 @@ namespace DbNet
                 string pName = string.Format(PARAMTERFORAMT, p.Name);
                 if (com.Parameters[pName] != null)
                 {
-                    p.Value = com.Parameters[pName].Value;
+                    object pv = com.Parameters[pName].Value;
+                    if (pv == DBNull.Value)
+                    {
+                        p.Value = null;
+                    }
+                    else
+                    {
+                        p.Value = com.Parameters[pName].Value;
+                    }
                 }
             }
             return new DbNetResult(result);
