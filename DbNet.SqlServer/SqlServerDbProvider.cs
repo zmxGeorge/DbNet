@@ -6,17 +6,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using System.Linq.Expressions;
 
 namespace DbNet
 {
     public class SqlServerDbProvider : IDbNetProvider
     {
+        private const string PARAMTERFORAMT = "@{0}";
+
+        private static readonly Regex PARAMTER_REPLACE = new Regex(@"[\?](?<pName>[\w]+)",RegexOptions.Compiled|RegexOptions.CultureInvariant|RegexOptions.IgnoreCase);
+
         public SqlServerDbProvider()
         {
         }
 
         public DbNetResult ExecuteCommand(DbNetCommand command,ref IDbNetScope scope, ExecuteType executetype)
         {
+            command.SqlText = PARAMTER_REPLACE.Replace(command.SqlText, "@${pName} OR @${pName} IS NULL");
             //封装数据库执行
             object result = null;
             scope = GetScope(scope,command);
@@ -28,6 +34,19 @@ namespace DbNet
                 com.Transaction = s.Transaction;
             }
             com.CommandTimeout = 30;
+            switch (command.CommandType)
+            {
+                default:
+                case "Text":
+                    com.CommandType = CommandType.Text;
+                    break;
+                case "StoredProcedure":
+                    com.CommandType = CommandType.StoredProcedure;
+                    break;
+                case "TableDirect":
+                    com.CommandType = CommandType.TableDirect;
+                    break;
+            }
             foreach (var p in command.Paramters)
             {
                 var sql_p = new SqlParameter(string.Format(PARAMTERFORAMT, p.Name), p.Value);
