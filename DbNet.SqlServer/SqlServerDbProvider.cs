@@ -37,7 +37,7 @@ namespace DbNet
             switch (command.CommandType)
             {
                 default:
-                case "Text":
+                case "SqlText":
                     com.CommandType = CommandType.Text;
                     break;
                 case "StoredProcedure":
