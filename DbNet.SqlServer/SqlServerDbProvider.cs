@@ -16,13 +16,31 @@ namespace DbNet
 
         private static readonly Regex PARAMTER_REPLACE = new Regex(@"[\?](?<pName>[\w]+)",RegexOptions.Compiled|RegexOptions.CultureInvariant|RegexOptions.IgnoreCase);
 
+        private static readonly Regex FORMAT_PARAMTER_REPLACE = new Regex(@"[\{][\@](?<pName>[\w]+)[\}]", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+
+        private const string FORMAT_CODE = "{{@{0}}}";
+
         public SqlServerDbProvider()
         {
         }
 
         public DbNetResult ExecuteCommand(DbNetCommand command,ref IDbNetScope scope, ExecuteType executetype)
         {
-            command.SqlText = PARAMTER_REPLACE.Replace(command.SqlText, "@${pName} OR @${pName} IS NULL");
+            StringBuilder sqlBulider =new StringBuilder(PARAMTER_REPLACE.Replace(command.SqlText, "@${pName} OR @${pName} IS NULL"));
+            string sql = sqlBulider.ToString();
+            foreach (Match m in FORMAT_PARAMTER_REPLACE.Matches(sql))
+            {
+                if (m.Success)
+                {
+                    var name = m.Groups["pName"].Value;
+                    var val = command.Paramters.Get(name).Value;
+                    string res = val == null ? string.Empty : val.ToString();
+                    var code = string.Format(FORMAT_CODE, name);
+                    sqlBulider = sqlBulider.Replace(code, res);
+                }
+            }
+            sql = sqlBulider.ToString();
+            command.SqlText = sql;
             //封装数据库执行
             object result = null;
             scope = GetScope(scope,command);
@@ -37,7 +55,7 @@ namespace DbNet
             switch (command.CommandType)
             {
                 default:
-                case "SqlText":
+                case "Text":
                     com.CommandType = CommandType.Text;
                     break;
                 case "StoredProcedure":

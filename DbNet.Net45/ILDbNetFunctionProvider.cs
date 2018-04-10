@@ -133,8 +133,7 @@ namespace DbNet
 
                 Label end_label = gen.DefineLabel();//指向执行结束的标签
 
-                gen.BeginExceptionBlock();//try开始
-
+                var try_label=gen.BeginExceptionBlock();//try开始
                 //初始化定义缓存是否存在的变量
                 gen.Emit(OpCodes.Ldc_I4_0);
                 gen.Emit(OpCodes.Stloc, hasCacheBulider);
@@ -257,7 +256,6 @@ namespace DbNet
                     gen.Emit(OpCodes.Ldloc, netScope_bulider);
                     gen.Emit(OpCodes.Call, MethodHelper.dispos_Method);
                 }
-
                 //若存在scope输出参数则赋值
                 if (scopeParemterInfo != null &&
                     (scopeParemterInfo.IsOut ||
@@ -290,6 +288,13 @@ namespace DbNet
                 }
                 gen.BeginCatchBlock(typeof(Exception));
                 //catch处理
+                if (scopeParemterInfo != null &&
+                  (scopeParemterInfo.IsOut ||scopeParemterInfo.ParameterType.IsByRef))
+                {
+                    gen.Emit(OpCodes.Ldarg, scopeParemterInfo.Position + 1);
+                    gen.Emit(OpCodes.Ldloc, netScope_bulider);
+                    gen.Emit(OpCodes.Stind_Ref);
+                }
                 gen.Emit(OpCodes.Stloc, exceptionBulider);
                 gen.Emit(OpCodes.Ldloc, exceptionBulider);
                 gen.Emit(OpCodes.Call, MethodHelper.exceptionMethod);

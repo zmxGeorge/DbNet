@@ -49,7 +49,7 @@ namespace DbNet
                 {
                     DbParamterAttribute paramter_att = p.GetCustomAttribute<DbParamterAttribute>();
                     string keyName = p.Name;
-                    if (!string.IsNullOrEmpty(paramter_att.Name))
+                    if (paramter_att!=null&&!string.IsNullOrEmpty(paramter_att.Name))
                     {
                         keyName = paramter_att.Name;
                     }
