@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
-using System.Data.MySql;
+using System.Data.SQLite;
 
 namespace DbNet
 {
-    public class MySqlDbNetScope : IDbNetScope
+    public class SQLiteDbNetScope : IDbNetScope
     {
         private string _connection_string = null;
 
@@ -18,12 +18,12 @@ namespace DbNet
 
         private bool is_commit = false;
 
-        public MySqlConnection Connection { get; set; }
+        public SQLiteConnection Connection { get; set; }
 
-        public MySqlTransaction Transaction { get; set; }
+        public SQLiteTransaction Transaction { get; set; }
 
 
-        public MySqlDbNetScope(string connectionString,DbNetIsolationLevel isolationLevel)
+        public SQLiteDbNetScope(string connectionString,DbNetIsolationLevel isolationLevel)
         {
             _connection_string = connectionString;
             _isolationLevel = isolationLevel;
@@ -86,7 +86,7 @@ namespace DbNet
         {
             if (Connection == null)
             {
-                Connection = new MySqlConnection(_connection_string);
+                Connection = new SQLiteConnection(_connection_string);
             }
             if (Connection.State == ConnectionState.Broken ||
                 Connection.State==ConnectionState.Closed)

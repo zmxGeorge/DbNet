@@ -7,11 +7,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Linq.Expressions;
-using System.Data.MySql;
+using System.Data.SQLite;
 
 namespace DbNet
 {
-    public class MySqlDbProvider : IDbNetProvider
+    public class SQLiteDbProvider : IDbNetProvider
     {
         private const string PARAMTERFORAMT = "@{0}";
 
@@ -21,7 +21,7 @@ namespace DbNet
 
         private const string FORMAT_CODE = "{{@{0}}}";
 
-        public MySqlDbProvider()
+        public SQLiteDbProvider()
         {
         }
 
@@ -46,8 +46,8 @@ namespace DbNet
             object result = null;
             scope = GetScope(scope,command);
             scope.Open();
-            var s = scope as MySqlDbNetScope;
-            MySqlCommand com = new MySqlCommand(command.SqlText, s.Connection);
+            var s = scope as SQLiteDbNetScope;
+            SQLiteCommand com = new SQLiteCommand(command.SqlText, s.Connection);
             if (s.Transaction != null)
             {
                 com.Transaction = s.Transaction;
@@ -90,7 +90,7 @@ namespace DbNet
             switch (executetype)
             {
                 case ExecuteType.ExecuteDateTable:
-                    using (MySqlDataAdapter adapter = new MySqlDataAdapter(com))
+                    using (SQLiteDataAdapter adapter = new SQLiteDataAdapter(com))
                     {
                         DataSet set = new DataSet();
                         adapter.Fill(set);
@@ -126,13 +126,13 @@ namespace DbNet
 
         private IDbNetScope GetScope(IDbNetScope scope,DbNetCommand command)
         {
-            if (scope != null&&scope is MySqlDbNetScope)
+            if (scope != null&&scope is SQLiteDbNetScope)
             {
                 return scope;
             }
             else
             {
-                return new MySqlDbNetScope(command.ConnectionString,command.IsolationLevel);
+                return new SQLiteDbNetScope(command.ConnectionString,command.IsolationLevel);
             }
         }
     }

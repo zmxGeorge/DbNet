@@ -10,13 +10,13 @@ namespace DbNet
     /// 简单SqlServer数据库路由提供程序
     /// 不带分布式处理
     /// </summary>
-    public class MySqlSimpleDbRouteProvider : IDbNetRouteProvider
+    public class SQLiteSimpleDbRouteProvider : IDbNetRouteProvider
     {
         private static string _connectionString = null;
 
-        private static readonly MySqlDbProvider _dbProvider = new MySqlDbProvider();
+        private static readonly SQLiteDbProvider _dbProvider = new SQLiteDbProvider();
 
-        public MySqlSimpleDbRouteProvider()
+        public SQLiteSimpleDbRouteProvider()
         {
         }
 
