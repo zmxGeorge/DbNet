@@ -20,6 +20,8 @@ namespace DbNet
 
         private const string FORMAT_CODE = "{{@{0}}}";
 
+        private const string P_NAME = "pName";
+
         public SqlServerDbProvider()
         {
         }
@@ -32,8 +34,14 @@ namespace DbNet
             {
                 if (m.Success)
                 {
-                    var name = m.Groups["pName"].Value;
-                    var val = command.Paramters.Get(name).Value;
+                    var name = m.Groups[P_NAME].Value;
+                    var paramter = command.Paramters.Get(name);
+                    if (paramter == null)
+                    {
+                        //如果本身不存在参数集合里面则跳过
+                        continue;
+                    }
+                    var val = paramter.Value;
                     string res = val == null ? string.Empty : val.ToString();
                     var code = string.Format(FORMAT_CODE, name);
                     sqlBulider = sqlBulider.Replace(code, res);
