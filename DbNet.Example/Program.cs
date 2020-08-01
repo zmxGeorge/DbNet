@@ -69,7 +69,9 @@ namespace DbNet.Example
             scope.Dispose();
             #endregion
             //缓存使用，实际调用MemoryCacheProvider，在DbNet.MemoryCache里面
-            var lis10 = dao.GetUsersToListForCache();
+            var list10 = dao.GetUsersToListForCache();
+            //存储过程示例
+            var list11 = dao.Do_queryUserCount();
             Console.ReadLine();
         }
 

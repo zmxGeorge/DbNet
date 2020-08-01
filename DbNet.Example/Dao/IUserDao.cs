@@ -79,5 +79,8 @@ namespace DbNet.Example.Dao
 
         [DbFunction(SqlText = "SELECT * FROM [User] WHERE Age=@age;SET @count=(SELECT COUNT(*) FROM [User])")]
         List<User> GetUsersToListByAge(int age,ref int count);
+
+        [DbFunction(SqlText ="_queryUserCount",CommandType= "StoredProcedure",ExecuteType =ExecuteType.ExecuteObject)]
+        int Do_queryUserCount();
     }
 }
