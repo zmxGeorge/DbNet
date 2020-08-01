@@ -387,7 +387,6 @@ namespace DbNet
                 gen.Emit(OpCodes.Ldnull);
                 gen.Emit(OpCodes.Ceq);
                 gen.Emit(OpCodes.Brtrue, cacheItemNullLabel);
-                //取得MySqlm内的参数以及结果
                 gen.Emit(OpCodes.Ldloc, cacheItem_bulider);
                 gen.Emit(OpCodes.Call, MethodHelper.cacheItem_getParamters);
                 gen.Emit(OpCodes.Stloc, paramterBulider);

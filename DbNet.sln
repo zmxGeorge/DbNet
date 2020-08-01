@@ -11,11 +11,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbNet.MemoryCache", "DbNet.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbNet.Net45", "DbNet.Net45\DbNet.Net45.csproj", "{80773A9A-3CCF-4013-802D-B91BF50A4A14}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{01BB21AC-8E35-4522-BE71-A4D87A9E18B7}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbNet.Sqlite", "DbNet.Sqlite\DbNet.Sqlite.csproj", "{5A9E6AA8-692B-4874-B442-532818625217}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbNet.MySql", "DbNet.MySql\DbNet.MySql.csproj", "{4CC4BED5-8EE6-46ED-B0CF-8A081177B007}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbNet.Example", "DbNet.Example\DbNet.Example.csproj", "{A4713C69-7386-4BFA-97D5-879DF855870F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,10 +39,6 @@ Global
 		{80773A9A-3CCF-4013-802D-B91BF50A4A14}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{80773A9A-3CCF-4013-802D-B91BF50A4A14}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{80773A9A-3CCF-4013-802D-B91BF50A4A14}.Release|Any CPU.Build.0 = Release|Any CPU
-		{01BB21AC-8E35-4522-BE71-A4D87A9E18B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{01BB21AC-8E35-4522-BE71-A4D87A9E18B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{01BB21AC-8E35-4522-BE71-A4D87A9E18B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{01BB21AC-8E35-4522-BE71-A4D87A9E18B7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5A9E6AA8-692B-4874-B442-532818625217}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5A9E6AA8-692B-4874-B442-532818625217}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A9E6AA8-692B-4874-B442-532818625217}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -51,6 +47,10 @@ Global
 		{4CC4BED5-8EE6-46ED-B0CF-8A081177B007}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4CC4BED5-8EE6-46ED-B0CF-8A081177B007}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4CC4BED5-8EE6-46ED-B0CF-8A081177B007}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4713C69-7386-4BFA-97D5-879DF855870F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4713C69-7386-4BFA-97D5-879DF855870F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4713C69-7386-4BFA-97D5-879DF855870F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4713C69-7386-4BFA-97D5-879DF855870F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

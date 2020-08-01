@@ -74,13 +74,23 @@ namespace DbNet
 
         public static List<T> ToList<T>(DataSet set) where T:class,new()
         {
-            if (set.Tables.Count > 0)
+            try
             {
-                return set.Tables[0].ToList<T>();
+                if (set.Tables.Count > 0)
+                {
+                    using (var table = set.Tables[0])
+                    {
+                        return table.ToList<T>();
+                    }
+                }
+                else
+                {
+                    return new List<T>();
+                }
             }
-            else
+            finally
             {
-                return new List<T>();
+                set.Dispose();
             }
         }
 
